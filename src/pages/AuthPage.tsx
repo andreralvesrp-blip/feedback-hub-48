@@ -36,10 +36,11 @@ const AuthPage = () => {
       toast.error(parsed.error.issues[0]?.message || "Confira os dados.");
       return;
     }
+    const credentials = { email: parsed.data.email, password: parsed.data.password };
     setLoading(true);
     const result = mode === "login"
-      ? await supabase.auth.signInWithPassword(parsed.data)
-      : await supabase.auth.signUp({ ...parsed.data, options: { emailRedirectTo: window.location.origin } });
+      ? await supabase.auth.signInWithPassword(credentials)
+      : await supabase.auth.signUp({ ...credentials, options: { emailRedirectTo: window.location.origin } });
     setLoading(false);
     if (result.error) {
       toast.error(result.error.message);
