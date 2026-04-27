@@ -3,8 +3,12 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import AppDashboard from "./pages/AppDashboard.tsx";
+import AuthPage from "./pages/AuthPage.tsx";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import PublicPanel from "./pages/PublicPanel.tsx";
+import PublicReview from "./pages/PublicReview.tsx";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +20,10 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/app" element={<AppDashboard />} />
+          <Route path="/avaliar/:slug" element={<PublicReview />} />
+          <Route path="/painel/:slug" element={<PublicPanel />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
