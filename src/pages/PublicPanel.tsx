@@ -71,7 +71,7 @@ const PublicPanel = () => {
             ["Total respostas", metrics.total_responses],
             ["Adorei", metrics.loved_count],
             ["Foi ok", metrics.ok_count],
-            ["Pode melhorar", metrics.improve_count],
+            ["Não gostei", metrics.improve_count],
             ["Orçamentos", metrics.budget_requests],
             ["Feedbacks", metrics.feedbacks],
             ["Google", metrics.google_redirects],

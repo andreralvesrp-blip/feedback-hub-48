@@ -33,8 +33,8 @@ const interestLabel: Record<string, string> = {
 const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perdido"];
 const responseStatus = ["novo", "visto", "resolvido"];
 const periods = { month: "Mês fechado", thirty: "Últimos 30 dias" };
-const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Pode melhorar" };
-const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Pode melhorar" };
+const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
+const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 
 const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
@@ -233,7 +233,7 @@ const AppDashboard = () => {
           <TabsContent value="dashboard" className="space-y-5">
             <div className="flex justify-end"><Select value={period} onValueChange={(v) => setPeriod(v as "month" | "thirty")}><SelectTrigger className="w-48 rounded-2xl"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(periods).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
-              {[["Índice de Experiência", stats.experienceIndex], ["Respostas", stats.total], ["Adorei", stats.loved], ["Foi ok", stats.ok], ["Pode melhorar", stats.improve], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
+              {[["Índice de Experiência", stats.experienceIndex], ["Respostas", stats.total], ["Adorei", stats.loved], ["Foi ok", stats.ok], ["Não gostei", stats.improve], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
                 <div key={label} className="rounded-3xl bg-card p-4 shadow-soft"><p className="text-sm text-muted-foreground">{label}</p><p className="text-3xl font-black">{value}</p></div>
               ))}
             </div>
