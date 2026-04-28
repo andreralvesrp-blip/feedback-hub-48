@@ -50,7 +50,7 @@ const PublicReview = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [step, setStep] = useState<"nps" | "private" | "contact" | "thanks" | "google" | "budget" | "done">("nps");
+  const [step, setStep] = useState<"nps" | "private" | "contact" | "thanks" | "google" | "budget" | "contactSaved" | "done">("nps");
   const [responseId, setResponseId] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [name, setName] = useState("");
@@ -60,7 +60,7 @@ const PublicReview = () => {
   const scoreAdvanceTimer = useRef<number | null>(null);
 
   const isHappy = score !== null && score >= 9;
-  const flowOrder = isHappy ? ["nps", "thanks", "budget", "google", "done"] : ["nps", "private", "contact", "done"];
+  const flowOrder = isHappy ? ["nps", "thanks", "budget", "contactSaved", "google", "done"] : ["nps", "private", "contact", "done"];
   const currentStepIndex = Math.max(0, flowOrder.indexOf(step));
   const progress = useMemo(() => {
     return Math.max(18, ((currentStepIndex + 1) / flowOrder.length) * 100);
@@ -123,9 +123,9 @@ const PublicReview = () => {
   };
 
   const handleGoogleContinue = async () => {
-    const npsId = responseId ?? (await submitNps({ google: wantsGoogle, redirected: false }));
+    const npsId = responseId ?? (await submitNps({ google: true, redirected: false }));
     if (!npsId) return;
-    if (wantsGoogle && company?.google_reviews_url) {
+    if (company?.google_reviews_url) {
       setSubmitting(true);
       const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: npsId });
       setSubmitting(false);
@@ -133,7 +133,6 @@ const PublicReview = () => {
         toast.error(error.message || "Não foi possível registrar sua escolha.");
         return;
       }
-      if (contactSaved) toast.success("Seu contato foi salvo. A equipe poderá te chamar pelo WhatsApp em breve.");
       window.open(company.google_reviews_url, "_blank", "noopener,noreferrer");
     }
     setStep("done");
@@ -174,7 +173,7 @@ const PublicReview = () => {
       return;
     }
     setContactSaved(true);
-    setStep("google");
+    setStep("contactSaved");
   };
 
   if (loading) {
@@ -284,28 +283,27 @@ const PublicReview = () => {
           )}
 
           {step === "google" && (
-            <div className="space-y-5">
+            <div className="space-y-5 text-center">
               <ExternalLink className="h-10 w-10 text-primary" />
-              {contactSaved && (
-                <p className="rounded-2xl bg-muted p-4 text-sm font-bold text-foreground">
-                  Seu contato foi salvo com sucesso!
-                </p>
-              )}
-              <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar na nossa página do Google?</h1>
+              <h1 className="text-2xl font-black leading-tight">Quer compartilhar sua experiência no Google também?</h1>
               <p className="text-sm font-bold text-muted-foreground">Leva menos de 1 minuto.</p>
-              <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem nossa empresa com mais confiança.</p>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="flex items-center gap-3 rounded-2xl bg-muted p-4 text-sm font-bold">
-                  <Checkbox checked={wantsGoogle} onCheckedChange={() => setWantsGoogle(true)} />
-                  <span>Sim</span>
-                </label>
-                <label className="flex items-center gap-3 rounded-2xl bg-muted p-4 text-sm font-bold">
-                  <Checkbox checked={!wantsGoogle} onCheckedChange={() => setWantsGoogle(false)} />
-                  <span>Não</span>
-                </label>
-              </div>
+              <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem com mais confiança.</p>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Finalizar
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Avaliar no Google
+              </Button>
+              <Button variant="quiet" size="touch" className="w-full" onClick={() => setStep("done")} disabled={submitting}>
+                Agora não
+              </Button>
+            </div>
+          )}
+
+          {step === "contactSaved" && (
+            <div className="space-y-5 text-center">
+              <CheckCircle2 className="mx-auto h-14 w-14 text-success" />
+              <h1 className="text-2xl font-black leading-tight">Perfeito! Já recebemos seu contato 😊</h1>
+              <p className="text-base text-muted-foreground">Nossa equipe pode te chamar pelo WhatsApp em breve.</p>
+              <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("google")}>
+                Continuar
               </Button>
             </div>
           )}
