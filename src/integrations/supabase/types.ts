@@ -22,7 +22,6 @@ export type Database = {
           email: string
           full_name: string
           id: string
-          password_hash: string
           status: Database["public"]["Enums"]["access_request_status"]
           updated_at: string
           whatsapp: string
@@ -34,7 +33,6 @@ export type Database = {
           email: string
           full_name: string
           id?: string
-          password_hash: string
           status?: Database["public"]["Enums"]["access_request_status"]
           updated_at?: string
           whatsapp: string
@@ -46,7 +44,6 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
-          password_hash?: string
           status?: Database["public"]["Enums"]["access_request_status"]
           updated_at?: string
           whatsapp?: string
@@ -435,7 +432,6 @@ export type Database = {
           _document: string
           _email: string
           _full_name: string
-          _password: string
           _whatsapp: string
         }
         Returns: string
