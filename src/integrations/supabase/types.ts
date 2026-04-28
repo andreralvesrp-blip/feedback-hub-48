@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          company_name: string
+          created_at: string
+          document: string
+          email: string
+          full_name: string
+          id: string
+          password_hash: string
+          status: Database["public"]["Enums"]["access_request_status"]
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          document: string
+          email: string
+          full_name: string
+          id?: string
+          password_hash: string
+          status?: Database["public"]["Enums"]["access_request_status"]
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          document?: string
+          email?: string
+          full_name?: string
+          id?: string
+          password_hash?: string
+          status?: Database["public"]["Enums"]["access_request_status"]
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       budget_requests: {
         Row: {
           company_id: string
@@ -317,6 +356,19 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      get_access_requests: {
+        Args: never
+        Returns: {
+          company_name: string
+          created_at: string
+          document: string
+          email: string
+          full_name: string
+          id: string
+          status: Database["public"]["Enums"]["access_request_status"]
+          whatsapp: string
+        }[]
+      }
       get_admin_companies: {
         Args: never
         Returns: {
@@ -377,6 +429,17 @@ export type Database = {
         Args: { _response_id: string }
         Returns: boolean
       }
+      submit_access_request: {
+        Args: {
+          _company_name: string
+          _document: string
+          _email: string
+          _full_name: string
+          _password: string
+          _whatsapp: string
+        }
+        Returns: string
+      }
       submit_budget_request: {
         Args: {
           _company_slug: string
@@ -402,6 +465,7 @@ export type Database = {
       }
     }
     Enums: {
+      access_request_status: "pending" | "approved" | "rejected"
       budget_status:
         | "novo"
         | "contatado"
@@ -545,6 +609,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      access_request_status: ["pending", "approved", "rejected"],
       budget_status: [
         "novo",
         "contatado",

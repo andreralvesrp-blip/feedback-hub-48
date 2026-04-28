@@ -154,6 +154,12 @@ const AppDashboard = () => {
         return;
       }
       const linked = (linkedCompanies ?? []) as UserCompany[];
+      if (linked.length === 0) {
+        await supabase.auth.signOut();
+        toast.error("Acesso ainda não liberado. Aguarde aprovação.");
+        navigate("/login", { replace: true });
+        return;
+      }
       setMemberships(linked);
       const requestedCompanyId = searchParams.get("company");
       const first = linked.find((item) => item.company_id === requestedCompanyId)?.companies ?? linked[0]?.companies ?? null;

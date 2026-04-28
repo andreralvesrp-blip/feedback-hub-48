@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Chrome, Loader2, LockKeyhole, Mail } from "lucide-react";
+import { Loader2, LockKeyhole, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
 const authSchema = z.object({
@@ -15,7 +14,6 @@ const authSchema = z.object({
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,22 +36,12 @@ const AuthPage = () => {
     }
     const credentials = { email: parsed.data.email, password: parsed.data.password };
     setLoading(true);
-    const result = mode === "login"
-      ? await supabase.auth.signInWithPassword(credentials)
-      : await supabase.auth.signUp({ ...credentials, options: { emailRedirectTo: window.location.origin } });
+    const result = await supabase.auth.signInWithPassword(credentials);
     setLoading(false);
     if (result.error) {
-      toast.error(result.error.message);
+      toast.error("Acesso ainda não liberado. Aguarde aprovação.");
       return;
     }
-    if (mode === "signup") toast.success("Conta criada. Confirme seu email para entrar.");
-  };
-
-  const google = async () => {
-    setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/app` });
-    setLoading(false);
-    if (result.error) toast.error(result.error.message || "Não foi possível entrar com Google.");
   };
 
   return (
@@ -69,10 +57,7 @@ const AuthPage = () => {
           </div>
         </div>
         <div className="space-y-3">
-          <Button variant="outline" size="touch" className="w-full" onClick={google} disabled={loading}>
-            <Chrome className="h-5 w-5" /> Entrar com Google
-          </Button>
-          <div className="grid gap-3 pt-2">
+          <div className="grid gap-3">
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-14 rounded-lg pl-11 text-base" />
@@ -80,10 +65,10 @@ const AuthPage = () => {
             <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Senha" className="h-14 rounded-lg text-base" />
           </div>
           <Button variant="hero" size="touch" className="w-full" onClick={submit} disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />} {mode === "login" ? "Entrar" : "Criar conta"}
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />} Entrar
           </Button>
-          <button className="w-full rounded-lg py-3 text-sm font-semibold text-primary" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
-            {mode === "login" ? "Ainda não tenho conta" : "Já tenho conta"}
+          <button className="w-full rounded-lg py-3 text-sm font-semibold text-primary" onClick={() => navigate("/solicitar-acesso")}>
+            Ainda não tenho conta
           </button>
         </div>
       </section>

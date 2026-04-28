@@ -52,7 +52,7 @@ const Index = () => {
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild variant="warm" size="touch">
-                  <Link to="/app">
+                  <Link to="/solicitar-acesso">
                     Começar agora <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
@@ -155,7 +155,7 @@ const Index = () => {
             Comece a capturar valor dos seus eventos hoje
           </h2>
           <Button asChild variant="warm" size="touch" className="shrink-0">
-            <Link to="/app">
+            <Link to="/solicitar-acesso">
               Criar minha empresa <ArrowRight className="h-5 w-5" />
             </Link>
           </Button>
