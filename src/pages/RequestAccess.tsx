@@ -199,7 +199,7 @@ const RequestAccess = () => {
               </Button>
             </div>
           ) : (
-            <div className="space-y-6">
+            <form className="space-y-6" onSubmit={submit} noValidate>
               <div className="space-y-3">
                 <div className="grid h-12 w-12 place-items-center rounded-lg bg-primary text-primary-foreground">
                   <UserRound className="h-5 w-5" />
@@ -209,23 +209,38 @@ const RequestAccess = () => {
                   <p className="mt-2 text-muted-foreground">Preencha os dados abaixo para solicitar acesso. Nossa equipe irá liberar sua conta.</p>
                 </div>
               </div>
-              <div className="grid gap-3">
-                <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} placeholder="Nome e sobrenome" className="h-12 rounded-lg" />
-                <div className="relative">
-                  <Building2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={form.companyName} onChange={(e) => setForm((f) => ({ ...f, companyName: e.target.value }))} placeholder="Nome da empresa" className="h-12 rounded-lg pl-11" />
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <Input value={form.fullName} onChange={(e) => updateField("fullName", e.target.value)} placeholder="Nome e sobrenome" className="h-12 rounded-lg" aria-invalid={!!visibleErrors.fullName} />
+                  {visibleErrors.fullName && <p className="text-sm font-medium text-destructive">{visibleErrors.fullName}</p>}
                 </div>
-                <Input value={form.document} onChange={(e) => setForm((f) => ({ ...f, document: e.target.value }))} placeholder="CNPJ ou CPF" className="h-12 rounded-lg" />
-                <Input value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} placeholder="WhatsApp" className="h-12 rounded-lg" />
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="Email" className="h-12 rounded-lg pl-11" />
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Building2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input value={form.companyName} onChange={(e) => updateField("companyName", e.target.value)} placeholder="Nome da empresa" className="h-12 rounded-lg pl-11" aria-invalid={!!visibleErrors.companyName} />
+                  </div>
+                  {visibleErrors.companyName && <p className="text-sm font-medium text-destructive">{visibleErrors.companyName}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Input value={form.document} onChange={(e) => updateField("document", maskCpfCnpj(e.target.value))} placeholder="CNPJ ou CPF" inputMode="numeric" className="h-12 rounded-lg" aria-invalid={!!visibleErrors.document} />
+                  {visibleErrors.document && <p className="text-sm font-medium text-destructive">{visibleErrors.document}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Input value={form.whatsapp} onChange={(e) => updateField("whatsapp", maskWhatsapp(e.target.value))} placeholder="WhatsApp" inputMode="numeric" className="h-12 rounded-lg" aria-invalid={!!visibleErrors.whatsapp} />
+                  {visibleErrors.whatsapp && <p className="text-sm font-medium text-destructive">{visibleErrors.whatsapp}</p>}
+                </div>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input value={form.email} onChange={(e) => updateField("email", e.target.value)} placeholder="Email" type="email" className="h-12 rounded-lg pl-11" aria-invalid={!!visibleErrors.email} />
+                  </div>
+                  {visibleErrors.email && <p className="text-sm font-medium text-destructive">{visibleErrors.email}</p>}
                 </div>
               </div>
-              <Button variant="hero" size="touch" className="w-full" onClick={submit} disabled={loading}>
+              <Button type="submit" variant="hero" size="touch" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />} Solicitar acesso
               </Button>
-            </div>
+            </form>
           )}
         </section>
       </div>
