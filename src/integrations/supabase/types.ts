@@ -271,6 +271,10 @@ export type Database = {
           total_responses: number
         }[]
       }
+      mark_nps_google_review_intent: {
+        Args: { _response_id: string }
+        Returns: boolean
+      }
       submit_budget_request: {
         Args: {
           _company_slug: string

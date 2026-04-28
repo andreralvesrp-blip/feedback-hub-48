@@ -118,6 +118,18 @@ const PublicReview = () => {
     setStep("budget");
   };
 
+  const handleFinalGoogleReview = async () => {
+    if (!responseId || !company?.google_reviews_url) return;
+    setSubmitting(true);
+    const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: responseId });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message || "Não foi possível registrar sua escolha.");
+      return;
+    }
+    window.open(company.google_reviews_url, "_blank", "noopener,noreferrer");
+  };
+
   const submitBudget = async () => {
     const parsed = contactSchema.safeParse({ name, whatsapp });
     if (!parsed.success) {
@@ -268,7 +280,20 @@ const PublicReview = () => {
             <div className="space-y-6 text-center">
               <CheckCircle2 className="mx-auto h-16 w-16 text-success" />
               <h1 className="text-3xl font-black leading-tight">{isHappy ? "Pronto! A empresa recebeu seu pedido e poderá entrar em contato pelo WhatsApp." : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
-              {!isHappy && wantsGoogle && company.google_reviews_url && (
+              {!isHappy && company.google_reviews_url && (
+                <div className="space-y-4 text-left">
+                  <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
+                    <Checkbox checked={wantsGoogle} onCheckedChange={(v) => setWantsGoogle(Boolean(v))} />
+                    <span>Deixar minha avaliação no Google</span>
+                  </label>
+                  {wantsGoogle && (
+                    <Button variant="hero" size="touch" className="w-full" onClick={handleFinalGoogleReview} disabled={submitting}>
+                      {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Continuar para o Google
+                    </Button>
+                  )}
+                </div>
+              )}
+              {isHappy && wantsGoogle && company.google_reviews_url && (
                 <Button asChild variant="hero" size="touch" className="w-full">
                   <a href={company.google_reviews_url} target="_blank" rel="noreferrer">Avaliar no Google</a>
                 </Button>
