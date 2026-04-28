@@ -3,6 +3,20 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
+  const steps = [
+    "Cliente escaneia o QR Code",
+    "Responde em menos de 60 segundos",
+    "Quem gostou vai para o Google",
+    "Quem quer orçamento deixa contato",
+  ];
+
+  const benefits = [
+    "Mais avaliações no Google automaticamente",
+    "Mais pedidos de orçamento sem esforço",
+    "Feedback real dos clientes",
+    "Tudo organizado em um painel simples",
+  ];
+
   return (
     <main className="min-h-screen bg-background">
       <section className="relative overflow-hidden bg-gradient-hero text-surface-strong-foreground">
@@ -19,7 +33,7 @@ const Index = () => {
               </div>
             </div>
             <Button asChild variant="quiet" size="sm" className="bg-background/15 text-surface-strong-foreground hover:bg-background/20">
-              <Link to="/app">Entrar</Link>
+              <Link to="/login">Entrar</Link>
             </Button>
           </header>
 
@@ -27,24 +41,24 @@ const Index = () => {
             <div className="animate-soft-rise space-y-7">
               <div className="inline-flex items-center gap-2 rounded-full bg-background/14 px-4 py-2 text-sm font-medium text-surface-strong-foreground/90 backdrop-blur">
                 <Sparkles className="h-4 w-4 text-accent" />
-                Respostas em menos de 60 segundos
+                QR Code para eventos e empresas locais
               </div>
               <div className="space-y-5">
                 <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-normal sm:text-6xl">
-                  Transforme cada QR Code em avaliação, melhoria e orçamento.
+                  Transforme convidados em avaliações no Google e novos clientes.
                 </h1>
                 <p className="max-w-xl text-lg leading-8 text-surface-strong-foreground/78">
-                  Uma plataforma mobile-first para empresas locais entenderem a experiência do cliente, direcionarem pessoas satisfeitas ao Google e receberem pedidos de orçamento sem fricção.
+                  Capture feedback em segundos via QR Code no evento e gere mais avaliações e pedidos de orçamento automaticamente.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild variant="warm" size="touch">
                   <Link to="/app">
-                    Criar minha empresa <ArrowRight className="h-5 w-5" />
+                    Começar agora <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
                 <Button asChild variant="quiet" size="touch" className="bg-background/12 text-surface-strong-foreground hover:bg-background/18">
-                  <Link to="/avaliar/demo-eventos">Ver fluxo público</Link>
+                  <a href="#como-funciona">Ver como funciona</a>
                 </Button>
               </div>
             </div>
@@ -92,6 +106,60 @@ const Index = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="bg-background px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-5xl space-y-5">
+          <h2 className="max-w-3xl text-3xl font-black leading-tight tracking-normal text-foreground sm:text-4xl">
+            Cada evento gera dezenas de oportunidades — e você perde todas.
+          </h2>
+          <div className="max-w-2xl space-y-4 text-lg leading-8 text-muted-foreground">
+            <p>A cada evento, dezenas de pessoas passam pela sua empresa.</p>
+            <p>Elas vão embora sem deixar avaliação, sem virar contato e sem gerar novos negócios.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="como-funciona" className="bg-surface px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-5xl space-y-9">
+          <h2 className="max-w-3xl text-3xl font-black leading-tight tracking-normal text-foreground sm:text-4xl">
+            Simples: um QR Code no evento resolve isso.
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step, index) => (
+              <div key={step} className="rounded-lg border border-border bg-card p-5 text-card-foreground shadow-sm">
+                <div className="mb-5 grid h-10 w-10 place-items-center rounded-md bg-secondary text-sm font-black text-primary">
+                  {index + 1}
+                </div>
+                <p className="text-base font-bold leading-6">{step}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-background px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2">
+          {benefits.map((benefit) => (
+            <div key={benefit} className="flex items-start gap-3 rounded-lg border border-border bg-card p-5 shadow-sm">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <p className="text-base font-bold leading-6 text-card-foreground">{benefit}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="bg-gradient-hero px-5 py-16 text-surface-strong-foreground sm:px-8 lg:px-10">
+        <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+          <h2 className="max-w-2xl text-3xl font-black leading-tight tracking-normal sm:text-4xl">
+            Comece a capturar valor dos seus eventos hoje
+          </h2>
+          <Button asChild variant="warm" size="touch" className="shrink-0">
+            <Link to="/app">
+              Criar minha empresa <ArrowRight className="h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </section>
     </main>
