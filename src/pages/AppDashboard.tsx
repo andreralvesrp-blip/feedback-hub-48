@@ -33,9 +33,9 @@ const interestLabel: Record<string, string> = {
 };
 
 const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perdido"];
-const responseStatus = ["novo", "visto", "resolvido"];
 const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
+const budgetStatusLabels: Record<string, string> = { novo: "Novo", contatado: "Contatado", orcamento_enviado: "Orçamento enviado", fechado: "Fechado", perdido: "Perdido" };
 
 const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
@@ -69,6 +69,7 @@ const AppDashboard = () => {
   const [periodValue, setPeriodValue] = useState<PeriodValue>("current");
   const [currentMonthStart, setCurrentMonthStart] = useState(getCurrentMonthStart);
   const [experienceFilter, setExperienceFilter] = useState<"all" | ExperienceRating>("all");
+  const [budgetStatusFilter, setBudgetStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -96,6 +97,14 @@ const AppDashboard = () => {
   }, [responses, budgets]);
 
   const selectedManualMonth = periodValue === "current" ? undefined : periodValue;
+  const visibleResponses = useMemo(
+    () => responses.filter((r) => experienceFilter === "all" || r.experience_rating === experienceFilter),
+    [responses, experienceFilter],
+  );
+  const visibleBudgets = useMemo(
+    () => budgets.filter((b) => budgetStatusFilter === "all" || b.status === budgetStatusFilter),
+    [budgets, budgetStatusFilter],
+  );
 
   const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
@@ -196,11 +205,6 @@ const AppDashboard = () => {
     await loadData(result.data.id);
   };
 
-  const updateResponse = async (id: string, status: string) => {
-    await (supabase as any).from("experience_responses").update({ status }).eq("id", id);
-    setResponses((items) => items.map((i) => i.id === id ? { ...i, status } : i));
-  };
-
   const updateBudget = async (id: string, status: string) => {
     await (supabase as any).from("budget_requests").update({ status }).eq("id", id);
     setBudgets((items) => items.map((i) => i.id === id ? { ...i, status } : i));
@@ -238,11 +242,11 @@ const AppDashboard = () => {
   };
 
   const downloadResponsesCsv = () => {
-    const rows = responses.map((r) => [formatDate(r.created_at), experienceLabels[r.experience_rating], r.comment || "", r.name || "", r.whatsapp || "", "QR", r.wants_google_review || r.redirected_to_google ? "sim" : "não"]);
-    const csv = [["Data", "Experiência", "Comentário", "Nome", "WhatsApp", "Origem", "Google"], ...rows]
+    const rows = visibleResponses.map((r) => [formatDate(r.created_at), experienceLabels[r.experience_rating], r.comment || "", r.name || "", r.whatsapp || "", r.wants_google_review || r.redirected_to_google ? "Sim" : "Não"]);
+    const csv = [["Data", "Experiência", "Comentário", "Nome", "WhatsApp", "Google"], ...rows]
       .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
       .join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
     a.download = `experiencias-${company?.slug || "empresa"}.csv`;
@@ -304,9 +308,9 @@ const AppDashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="responses"><DataCard title="Respostas" action={<><Select value={experienceFilter} onValueChange={(v) => setExperienceFilter(v as "all" | ExperienceRating)}><SelectTrigger className="w-44 rounded-2xl"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(experienceFilters).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={downloadResponsesCsv}><Download className="h-4 w-4" /> CSV</Button></>}>{responses.length === 0 ? <Empty /> : responses.filter((r) => experienceFilter === "all" || r.experience_rating === experienceFilter).map((r) => <div key={r.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_0.8fr_1.5fr_0.8fr_0.8fr_0.8fr]"><Cell label="Data" value={formatDate(r.created_at)} /><Cell label="Experiência" value={experienceLabels[r.experience_rating]} /><Cell label="Comentário" value={r.comment || "—"} /><Cell label="Contato" value={`${r.name || "—"} ${r.whatsapp || ""}`} /><Cell label="Google" value={r.wants_google_review || r.redirected_to_google ? "Sim" : "Não"} /><Select value={r.status} onValueChange={(v) => updateResponse(r.id, v)}><SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{responseStatus.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>)}</DataCard></TabsContent>
+          <TabsContent value="responses"><DataCard title="Respostas" action={<><Select value={experienceFilter} onValueChange={(v) => setExperienceFilter(v as "all" | ExperienceRating)}><SelectTrigger className="w-44 rounded-2xl"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(experienceFilters).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={downloadResponsesCsv}><Download className="h-4 w-4" /> CSV</Button></>}>{visibleResponses.length === 0 ? <Empty /> : visibleResponses.map((r) => <div key={r.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_0.8fr_1.5fr_0.8fr_0.8fr]"><Cell label="Data" value={formatDate(r.created_at)} /><Cell label="Experiência" value={experienceLabels[r.experience_rating]} /><Cell label="Comentário" value={r.comment || "—"} /><Cell label="Contato" value={`${r.name || "—"} ${r.whatsapp || ""}`} /><Cell label="Google" value={r.wants_google_review || r.redirected_to_google ? "Sim" : "Não"} /></div>)}</DataCard></TabsContent>
 
-          <TabsContent value="budgets"><DataCard title="Orçamentos">{budgets.length === 0 ? <Empty /> : budgets.map((b) => <div key={b.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_1fr_1fr_1fr_0.8fr_1fr_0.8fr]"><Cell label="Data" value={formatDate(b.created_at)} /><Cell label="Nome" value={b.name} /><Cell label="WhatsApp" value={b.whatsapp} /><Cell label="Interesse" value={interestLabel[b.interest] || b.interest} /><Cell label="Experiência" value={b.experience_rating ? experienceLabels[b.experience_rating] : "—"} /><Select value={b.status} onValueChange={(v) => updateBudget(b.id, v)}><SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{budgetStatus.map((s) => <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>)}</SelectContent></Select><Button asChild variant="hero"><a href={`https://wa.me/${cleanPhone(b.whatsapp)}`} target="_blank" rel="noreferrer">Chamar</a></Button></div>)}</DataCard></TabsContent>
+          <TabsContent value="budgets"><DataCard title="Orçamentos" action={<Select value={budgetStatusFilter} onValueChange={setBudgetStatusFilter}><SelectTrigger className="w-52 rounded-2xl"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos</SelectItem>{budgetStatus.map((s) => <SelectItem key={s} value={s}>{budgetStatusLabels[s]}</SelectItem>)}</SelectContent></Select>}>{visibleBudgets.length === 0 ? <Empty /> : visibleBudgets.map((b) => <div key={b.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_1fr_1fr_1fr_0.8fr_1fr_0.8fr]"><Cell label="Data" value={formatDate(b.created_at)} /><Cell label="Nome" value={b.name} /><Cell label="WhatsApp" value={b.whatsapp} /><Cell label="Interesse" value={interestLabel[b.interest] || b.interest} /><Cell label="Experiência" value={b.experience_rating ? experienceLabels[b.experience_rating] : "—"} /><Select value={b.status} onValueChange={(v) => updateBudget(b.id, v)}><SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{budgetStatus.map((s) => <SelectItem key={s} value={s}>{budgetStatusLabels[s]}</SelectItem>)}</SelectContent></Select><Button asChild variant="hero"><a href={`https://wa.me/${cleanPhone(b.whatsapp)}`} target="_blank" rel="noreferrer">Chamar</a></Button></div>)}</DataCard></TabsContent>
 
           <TabsContent value="qr" className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
             <section className="rounded-3xl bg-card p-5 shadow-soft"><QRCodeSVG ref={qrRef} value={reviewUrl} size={220} level="H" className="mx-auto h-auto w-full max-w-[220px]" /><div className="mt-5 grid gap-3"><Button variant="hero" size="touch" onClick={() => copy(reviewUrl)}><Copy className="h-4 w-4" /> Copiar link</Button><Button variant="outline" size="touch" onClick={downloadQr}><Download className="h-4 w-4" /> Download do QR</Button></div></section>
