@@ -235,7 +235,7 @@ const PublicReview = () => {
           {step === "nps" && (
             <div className="mx-auto w-full max-w-sm space-y-8 py-4 text-center">
               <div className="space-y-3">
-                <h1 className="text-3xl font-black leading-tight">Como foi a experiência de hoje?</h1>
+                <h1 className="text-3xl font-black leading-tight">Como foi sua experiência hoje no Kids Point?</h1>
               </div>
               <div className="space-y-3">
                 {reactionOptions.map((option) => {
