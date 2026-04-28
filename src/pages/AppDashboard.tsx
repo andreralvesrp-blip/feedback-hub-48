@@ -7,21 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 type SessionUser = { id: string; email?: string };
-type Company = { id: string; owner_user_id: string; name: string; slug: string; logo_url: string | null; segment: string | null; whatsapp: string | null; google_reviews_url: string | null; responsible_name: string | null; login_email: string | null; alert_phone: string | null; plan: string; public_panel_token: string; };
+type Company = { id: string; owner_user_id: string; name: string; slug: string; logo_url: string | null; segment: string | null; whatsapp: string | null; google_reviews_url: string | null; responsible_name: string | null; login_email: string | null; alert_phone: string | null; plan: string; public_panel_token: string; initial_review_question?: string | null; };
 type ExperienceRating = "loved" | "ok" | "improve";
 type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
 type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
-type Webhook = { id: string; name: string; url: string; is_active: boolean; };
 type MonthOption = { month_start: string; month_label: string };
 type PeriodValue = "current" | string;
 
 const companySchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  name: z.string().trim().min(2, "Informe o nome da empresa.").max(120),
+  alert_phone: z.string().trim().max(30),
+  google_reviews_url: z.string().trim().url("Informe uma URL válida.").or(z.literal("")),
+  initial_review_question: z.string().trim().min(5, "Informe a pergunta inicial.").max(180),
 });
 
 const interestLabel: Record<string, string> = {
