@@ -65,7 +65,7 @@ const AuthPage = () => {
           </div>
           <div>
             <h1 className="text-3xl font-black leading-tight">Área do cliente</h1>
-            <p className="text-muted-foreground">Entre para ver NPS, orçamentos, QR Code e configurações.</p>
+            <p className="text-muted-foreground">Entre para ver experiência, orçamentos, QR Code e configurações.</p>
           </div>
         </div>
         <div className="space-y-3">
