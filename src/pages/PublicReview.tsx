@@ -21,10 +21,21 @@ type PublicCompany = {
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Informe seu nome").max(120),
-  whatsapp: z.string().trim().regex(/^[0-9+()\-\s]{8,32}$/, "Informe um WhatsApp válido"),
+  whatsapp: z.string().trim().regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, "Informe um WhatsApp válido com DDD"),
 });
 
-const sanitizePhone = (value: string) => value.replace(/[^0-9+]/g, "");
+const sanitizePhone = (value: string) => value.replace(/\D/g, "");
+
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  const area = digits.slice(0, 2);
+  const first = digits.length > 10 ? digits.slice(2, 7) : digits.slice(2, 6);
+  const second = digits.length > 10 ? digits.slice(7, 11) : digits.slice(6, 10);
+
+  if (digits.length <= 2) return area ? `(${area}` : "";
+  if (!second) return `(${area}) ${first}`;
+  return `(${area}) ${first}-${second}`;
+};
 
 const PublicReview = () => {
   const { slug = "" } = useParams();
@@ -211,10 +222,6 @@ const PublicReview = () => {
               <h1 className="text-2xl font-black leading-tight">Se preferir, podemos te chamar no WhatsApp para entender melhor sua experiência.</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome (opcional)" className="h-14 rounded-2xl text-base" />
               <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="WhatsApp (opcional)" className="h-14 rounded-2xl text-base" />
-              <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
-                <Checkbox checked={wantsGoogle} onCheckedChange={(v) => setWantsGoogle(Boolean(v))} />
-                <span>Deixar minha avaliação no Google</span>
-              </label>
               <Button variant="hero" size="touch" className="w-full" onClick={handlePrivateSubmit} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Enviar feedback
               </Button>
@@ -250,7 +257,7 @@ const PublicReview = () => {
               <p className="font-bold text-primary">Se você também estiver planejando um evento, podemos te ajudar 😊</p>
               <h1 className="text-2xl font-black leading-tight">Quer receber nosso contato?</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="h-14 rounded-2xl text-base" />
-              <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="WhatsApp" className="h-14 rounded-2xl text-base" />
+              <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={15} placeholder="WhatsApp com DDD" className="h-14 rounded-2xl text-base" />
               <Button variant="warm" size="touch" className="w-full" onClick={submitBudget} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Receber contato
               </Button>
