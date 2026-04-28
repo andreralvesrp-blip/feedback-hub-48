@@ -49,12 +49,12 @@ const PublicPanel = () => {
   return (
     <main className="min-h-screen bg-background px-4 py-5">
       <div className="mx-auto max-w-4xl space-y-5">
-        <header className="rounded-lg bg-gradient-hero p-6 text-surface-strong-foreground shadow-glow">
+        <header className="rounded-lg border border-border bg-card p-6 shadow-soft">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-surface-strong-foreground/70">Dashboard público</p>
+              <p className="text-sm text-muted-foreground">Dashboard público</p>
               <h1 className="mt-1 text-3xl font-bold leading-tight">{metrics.company_name}</h1>
-              <p className="mt-3 max-w-lg text-sm text-surface-strong-foreground/76">Métricas agregadas sem dados pessoais.</p>
+              <p className="mt-3 max-w-lg text-sm text-muted-foreground">Métricas agregadas sem dados pessoais.</p>
             </div>
             <ShieldCheck className="h-9 w-9 text-accent" />
           </div>
