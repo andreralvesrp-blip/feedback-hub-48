@@ -214,8 +214,7 @@ const PublicReview = () => {
     return (
       <main className="grid min-h-screen place-items-center bg-background px-5 text-center">
         <div className="max-w-sm space-y-3 rounded-3xl bg-card p-6 shadow-soft">
-          <h1 className="text-2xl font-black">Link não encontrado</h1>
-          <p className="text-muted-foreground">Confira se o endereço da empresa está correto.</p>
+          <h1 className="text-2xl font-black">Empresa não encontrada.</h1>
         </div>
       </main>
     );
