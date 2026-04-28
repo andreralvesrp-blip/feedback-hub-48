@@ -45,6 +45,12 @@ const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perd
 const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const budgetStatusLabels: Record<string, string> = { novo: "Novo", contatado: "Contatado", orcamento_enviado: "Orçamento enviado", fechado: "Fechado", perdido: "Perdido" };
+const configFieldLabels: Record<ConfigField, string> = {
+  name: "Nome da empresa",
+  alert_phone: "Telefone para envio de novo orçamento",
+  google_reviews_url: "URL de review do Google",
+  initial_review_question: "Pergunta inicial para avaliação",
+};
 
 const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
@@ -322,7 +328,7 @@ const AppDashboard = () => {
           </TabsContent>
 
           <TabsContent value="settings">
-            <section className="mx-auto max-w-2xl rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-black">Configurações</h2><div className="grid gap-4"><div className="space-y-2"><label className="text-sm font-bold">Nome da empresa</label><Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="h-12 rounded-2xl" /></div><div className="space-y-2"><label className="text-sm font-bold">Telefone para envio de novo orçamento</label><Input value={form.alert_phone} onChange={(e) => setForm((f) => ({ ...f, alert_phone: e.target.value }))} inputMode="tel" className="h-12 rounded-2xl" /></div><div className="space-y-2"><label className="text-sm font-bold">URL de review do Google</label><Input value={form.google_reviews_url} onChange={(e) => setForm((f) => ({ ...f, google_reviews_url: e.target.value }))} inputMode="url" className="h-12 rounded-2xl" /></div><div className="space-y-2"><label className="text-sm font-bold">Pergunta inicial para avaliação</label><Textarea value={form.initial_review_question} onChange={(e) => setForm((f) => ({ ...f, initial_review_question: e.target.value }))} maxLength={180} className="min-h-24 rounded-2xl text-base" /></div></div><Button variant="hero" size="touch" className="mt-5 w-full" onClick={saveCompany} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</Button></section>
+            <section className="mx-auto max-w-2xl rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-black">Configurações</h2><div className="grid gap-4"><InlineConfigField field="name" value={form.name} onChange={(value) => setForm((f) => ({ ...f, name: value }))} onSave={saveCompanyField} saving={savingField === "name"} saved={savedField === "name"} /><InlineConfigField field="alert_phone" value={form.alert_phone} onChange={(value) => setForm((f) => ({ ...f, alert_phone: value }))} onSave={saveCompanyField} saving={savingField === "alert_phone"} saved={savedField === "alert_phone"} inputMode="tel" /><InlineConfigField field="google_reviews_url" value={form.google_reviews_url} onChange={(value) => setForm((f) => ({ ...f, google_reviews_url: value }))} onSave={saveCompanyField} saving={savingField === "google_reviews_url"} saved={savedField === "google_reviews_url"} inputMode="url" /><InlineConfigField field="initial_review_question" value={form.initial_review_question} onChange={(value) => setForm((f) => ({ ...f, initial_review_question: value }))} onSave={saveCompanyField} saving={savingField === "initial_review_question"} saved={savedField === "initial_review_question"} multiline /></div></section>
           </TabsContent>
         </Tabs>
       </div>
