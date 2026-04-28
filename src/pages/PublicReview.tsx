@@ -286,12 +286,12 @@ const PublicReview = () => {
           {step === "google" && (
             <div className="space-y-5">
               <ExternalLink className="h-10 w-10 text-primary" />
-              <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar na nossa página do Google?</h1>
               {contactSaved && (
                 <p className="rounded-2xl bg-muted p-4 text-sm font-bold text-foreground">
-                  Seu contato foi salvo. A equipe poderá te chamar pelo WhatsApp em breve.
+                  Seu contato foi salvo com sucesso!
                 </p>
               )}
+              <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar na nossa página do Google?</h1>
               <p className="text-sm font-bold text-muted-foreground">Leva menos de 1 minuto.</p>
               <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem nossa empresa com mais confiança.</p>
               <div className="grid grid-cols-2 gap-3">
