@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ExternalLink, HeartHandshake, Loader2, MessageSquareText, PartyPopper } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { z } from "zod";
@@ -57,6 +57,7 @@ const PublicReview = () => {
   const [whatsapp, setWhatsapp] = useState("");
   const [wantsGoogle, setWantsGoogle] = useState(false);
   const [contactSaved, setContactSaved] = useState(false);
+  const scoreAdvanceTimer = useRef<number | null>(null);
 
   const isHappy = score !== null && score >= 9;
   const flowOrder = isHappy ? ["nps", "thanks", "budget", "google", "done"] : ["nps", "private", "contact", "done"];
@@ -103,14 +104,12 @@ const PublicReview = () => {
   };
 
   const handleScore = (value: number) => {
+    if (scoreAdvanceTimer.current) window.clearTimeout(scoreAdvanceTimer.current);
     setScore(value);
-    if (value <= 8) {
-      setWantsGoogle(false);
-      setStep("private");
-    } else {
-      setWantsGoogle(true);
-      setStep("thanks");
-    }
+    setWantsGoogle(value > 8);
+    scoreAdvanceTimer.current = window.setTimeout(() => {
+      setStep(value <= 8 ? "private" : "thanks");
+    }, 180);
   };
 
   const handlePrivateSubmit = async () => {
@@ -229,23 +228,24 @@ const PublicReview = () => {
 
         <section className="flex flex-1 flex-col justify-center rounded-3xl bg-card p-5 shadow-soft animate-soft-rise">
           {step === "nps" && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h1 className="text-2xl font-black leading-tight">De 0 a 10, o quanto você recomendaria o {company.name} para um familiar ou amigo?</h1>
+            <div className="mx-auto w-full max-w-sm space-y-7 py-4 text-center">
+              <div className="space-y-3">
+                <h1 className="text-3xl font-black leading-tight">O quanto você recomendaria a experiência de hoje?</h1>
+                <p className="text-base font-semibold text-muted-foreground">Leva só alguns segundos.</p>
               </div>
-              <div className="grid grid-cols-11 gap-1.5">
+              <div className="grid grid-cols-6 gap-2.5">
                 {Array.from({ length: 11 }, (_, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => handleScore(i)}
-                    className="aspect-square min-w-0 rounded-lg border border-border bg-surface text-sm font-black text-muted-foreground shadow-soft transition hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-base"
+                    className={`flex min-h-14 min-w-0 items-center justify-center rounded-2xl border text-lg font-black shadow-soft transition-all duration-150 hover:bg-secondary hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${score === i ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface text-foreground"}`}
                   >
                     {i}
                   </button>
                 ))}
               </div>
-              <div className="flex items-center justify-between text-xs font-bold text-muted-foreground sm:text-sm">
+              <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
                 <span>Pouco provável</span>
                 <span>Muito provável</span>
               </div>
