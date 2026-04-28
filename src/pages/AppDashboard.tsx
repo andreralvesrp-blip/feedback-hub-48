@@ -5,7 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -95,10 +95,7 @@ const AppDashboard = () => {
     };
   }, [responses, budgets]);
 
-  const fixedMonthOptions = useMemo(
-    () => monthOptions.filter((month) => month.month_start !== currentMonthStart),
-    [monthOptions, currentMonthStart],
-  );
+  const selectedManualMonth = periodValue === "current" ? undefined : periodValue;
 
   const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
@@ -258,9 +255,16 @@ const AppDashboard = () => {
     navigate("/login", { replace: true });
   };
 
-  const handlePeriodChange = async (value: PeriodValue) => {
+  const handleCurrentMonthClick = async () => {
+    const nextCurrentMonth = getCurrentMonthStart();
+    setCurrentMonthStart(nextCurrentMonth);
+    setPeriodValue("current");
+    if (company) await loadData(company.id, nextCurrentMonth);
+  };
+
+  const handleManualMonthChange = async (value: string) => {
     setPeriodValue(value);
-    if (company) await loadData(company.id, getPeriodMonthStart(value));
+    if (company) await loadData(company.id, value);
   };
 
   if (loading) return <main className="grid min-h-screen place-items-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></main>;
@@ -288,7 +292,7 @@ const AppDashboard = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-5">
-            <div className="flex items-center justify-end gap-3"><span className="text-sm font-semibold text-muted-foreground">Período</span><Select value={periodValue} onValueChange={handlePeriodChange} disabled={!company || dashboardLoading}><SelectTrigger className="w-52 rounded-2xl"><SelectValue placeholder="Mês atual" /></SelectTrigger><SelectContent><SelectItem value="current">Mês atual</SelectItem>{fixedMonthOptions.length > 0 && <SelectSeparator />}{fixedMonthOptions.map((month) => <SelectItem key={month.month_start} value={month.month_start}>{month.month_label}</SelectItem>)}</SelectContent></Select>{dashboardLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}</div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3"><span className="text-sm font-semibold text-muted-foreground">Período</span><div className="flex items-center gap-2"><Button variant={periodValue === "current" ? "hero" : "outline"} onClick={handleCurrentMonthClick} disabled={!company || dashboardLoading}>Mês atual</Button><Select value={selectedManualMonth} onValueChange={handleManualMonthChange} disabled={!company || dashboardLoading}><SelectTrigger className="w-52 rounded-2xl"><SelectValue placeholder="Selecionar mês" /></SelectTrigger><SelectContent>{monthOptions.map((month) => <SelectItem key={month.month_start} value={month.month_start}>{month.month_label}</SelectItem>)}</SelectContent></Select>{dashboardLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}</div></div>
             <div className={`grid gap-3 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-7 ${dashboardLoading ? "opacity-60" : "opacity-100"}`}>
               {[["Índice de Experiência", stats.experienceIndex], ["Respostas", stats.total], ["Adorei", stats.loved], ["Foi ok", stats.ok], ["Não gostei", stats.improve], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
                 <div key={label} className="rounded-3xl bg-card p-4 shadow-soft"><p className="text-sm text-muted-foreground">{label}</p><p className="text-3xl font-black">{value}</p></div>
