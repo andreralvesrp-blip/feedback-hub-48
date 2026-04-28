@@ -58,9 +58,10 @@ const PublicReview = () => {
   const [wantsGoogle, setWantsGoogle] = useState(false);
 
   const isHappy = score !== null && score >= 9;
+  const flowOrder = isHappy ? ["nps", "thanks", "budget", "google", "done"] : ["nps", "private", "contact", "done"];
+  const currentStepIndex = Math.max(0, flowOrder.indexOf(step));
   const progress = useMemo(() => {
-    const order = isHappy ? ["nps", "thanks", "budget", "google", "done"] : ["nps", "private", "contact", "done"];
-    return Math.max(18, ((order.indexOf(step) + 1) / order.length) * 100);
+    return Math.max(18, ((currentStepIndex + 1) / flowOrder.length) * 100);
   }, [isHappy, step]);
 
   useEffect(() => {
@@ -122,9 +123,11 @@ const PublicReview = () => {
   };
 
   const handleGoogleContinue = async () => {
+    const npsId = responseId ?? (await submitNps({ google: wantsGoogle, redirected: false }));
+    if (!npsId) return;
     if (wantsGoogle && company?.google_reviews_url) {
       setSubmitting(true);
-      const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: responseId });
+      const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: npsId });
       setSubmitting(false);
       if (error) {
         toast.error(error.message || "Não foi possível registrar sua escolha.");
@@ -208,8 +211,17 @@ const PublicReview = () => {
           </div>
         </header>
 
-        <div className="mb-5 h-2 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
+        <div className="mb-5 space-y-2">
+          <div className="flex items-center justify-between px-1 text-xs font-black text-muted-foreground">
+            {flowOrder.slice(0, -1).map((item, index) => (
+              <span key={item} className={index <= currentStepIndex ? "text-primary" : undefined}>
+                {index + 1}
+              </span>
+            ))}
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
+          </div>
         </div>
 
         <section className="flex flex-1 flex-col justify-center rounded-3xl bg-card p-5 shadow-soft animate-soft-rise">
