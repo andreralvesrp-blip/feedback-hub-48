@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, CheckCircle2, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, QrCode, Settings, Star, Table2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 type SessionUser = { id: string; email?: string };
 type Company = { id: string; owner_user_id: string; name: string; slug: string; logo_url: string | null; segment: string | null; whatsapp: string | null; google_reviews_url: string | null; responsible_name: string | null; login_email: string | null; alert_phone: string | null; plan: string; public_panel_token: string; initial_review_question?: string | null; };
+type UserCompany = { company_id: string; role: "super_admin" | "company_admin" | "viewer"; companies: Company | null };
 type ExperienceRating = "loved" | "ok" | "improve";
 type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
 type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
@@ -74,9 +75,11 @@ const getPeriodMonthStart = (period: PeriodValue) => period === "current" ? getC
 
 const AppDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const qrRef = useRef<SVGSVGElement | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
+  const [memberships, setMemberships] = useState<UserCompany[]>([]);
   const [responses, setResponses] = useState<ExperienceResponse[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [monthOptions, setMonthOptions] = useState<MonthOption[]>([]);
@@ -141,8 +144,16 @@ const AppDashboard = () => {
       }
       const currentUser = { id: data.session.user.id, email: data.session.user.email ?? "" };
       setUser(currentUser);
-      const { data: companies } = await (supabase as any).from("companies").select("*").eq("owner_user_id", currentUser.id).order("created_at", { ascending: true }).limit(1);
-      const first = companies?.[0] ?? null;
+      const { data: linkedCompanies, error: linkedError } = await (supabase as any).from("user_companies").select("company_id, role, companies(*)").order("created_at", { ascending: true });
+      if (linkedError) {
+        toast.error(linkedError.message || "Não foi possível carregar suas empresas.");
+        setLoading(false);
+        return;
+      }
+      const linked = (linkedCompanies ?? []) as UserCompany[];
+      setMemberships(linked);
+      const requestedCompanyId = searchParams.get("company");
+      const first = linked.find((item) => item.company_id === requestedCompanyId)?.companies ?? linked[0]?.companies ?? null;
       setCompany(first);
       setForm({
         name: first?.name ?? "",
@@ -168,7 +179,7 @@ const AppDashboard = () => {
       setLoading(false);
     };
     init();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   useEffect(() => {
     const syncCurrentMonth = () => {
@@ -210,7 +221,8 @@ const AppDashboard = () => {
       return;
     }
     setSavingField(field);
-    const fieldPayload = { [field]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value };
+    const normalizedField = field === "google_reviews_url" ? "review_google_url" : field === "initial_review_question" ? "initial_question" : field;
+    const fieldPayload = { [normalizedField]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value };
     const createPayload = {
       ...fieldPayload,
       owner_user_id: user.id,
