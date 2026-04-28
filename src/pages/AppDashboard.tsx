@@ -36,6 +36,7 @@ const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perd
 const responseStatus = ["novo", "visto", "resolvido"];
 const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
+const budgetStatusLabels: Record<string, string> = { novo: "Novo", contatado: "Contatado", orcamento_enviado: "Orçamento enviado", fechado: "Fechado", perdido: "Perdido" };
 
 const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
@@ -69,6 +70,7 @@ const AppDashboard = () => {
   const [periodValue, setPeriodValue] = useState<PeriodValue>("current");
   const [currentMonthStart, setCurrentMonthStart] = useState(getCurrentMonthStart);
   const [experienceFilter, setExperienceFilter] = useState<"all" | ExperienceRating>("all");
+  const [budgetStatusFilter, setBudgetStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -96,6 +98,14 @@ const AppDashboard = () => {
   }, [responses, budgets]);
 
   const selectedManualMonth = periodValue === "current" ? undefined : periodValue;
+  const visibleResponses = useMemo(
+    () => responses.filter((r) => experienceFilter === "all" || r.experience_rating === experienceFilter),
+    [responses, experienceFilter],
+  );
+  const visibleBudgets = useMemo(
+    () => budgets.filter((b) => budgetStatusFilter === "all" || b.status === budgetStatusFilter),
+    [budgets, budgetStatusFilter],
+  );
 
   const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
