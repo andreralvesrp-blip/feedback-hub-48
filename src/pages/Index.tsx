@@ -24,7 +24,7 @@ const Index = () => {
         <div className="mx-auto flex min-h-[92vh] max-w-6xl flex-col px-5 py-6 sm:px-8 lg:px-10">
           <header className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-background/15 backdrop-blur">
+              <div className="grid h-11 w-11 place-items-center rounded-lg bg-background/15 backdrop-blur">
                 <QrCode className="h-5 w-5" />
               </div>
               <div>
@@ -44,7 +44,7 @@ const Index = () => {
                 QR Code para eventos e empresas locais
               </div>
               <div className="space-y-5">
-                <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-normal sm:text-6xl">
+                <h1 className="max-w-3xl text-4xl font-bold leading-[1.02] tracking-normal sm:text-6xl">
                   Transforme convidados em avaliações no Google e novos clientes.
                 </h1>
                 <p className="max-w-xl text-lg leading-8 text-surface-strong-foreground/78">
@@ -63,14 +63,14 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="animate-soft-rise rounded-[2rem] border border-background/20 bg-background/12 p-4 shadow-glow backdrop-blur-xl [animation-delay:120ms]">
-              <div className="rounded-[1.5rem] bg-card p-4 text-card-foreground shadow-soft">
+            <div className="animate-soft-rise rounded-lg border border-background/20 bg-background/12 p-4 shadow-glow backdrop-blur-xl [animation-delay:120ms]">
+              <div className="rounded-lg bg-card p-4 text-card-foreground shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Hoje</p>
-                    <p className="text-2xl font-black">Experiência 84%</p>
+                    <p className="text-2xl font-bold">Experiência 84%</p>
                   </div>
-                  <div className="rounded-2xl bg-brand-soft p-3 text-primary">
+                  <div className="rounded-lg bg-brand-soft p-3 text-primary">
                     <BarChart3 className="h-6 w-6" />
                   </div>
                 </div>
@@ -80,8 +80,8 @@ const Index = () => {
                     ["41", "orçamentos"],
                     ["73", "Google"],
                   ].map(([value, label]) => (
-                    <div key={label} className="rounded-2xl bg-muted p-3 text-center">
-                      <p className="text-xl font-black">{value}</p>
+                    <div key={label} className="rounded-lg bg-muted p-3 text-center">
+                      <p className="text-xl font-bold">{value}</p>
                       <p className="text-xs text-muted-foreground">{label}</p>
                     </div>
                   ))}
@@ -92,8 +92,8 @@ const Index = () => {
                     [MessageCircle, "Novo orçamento", "Casamento · chamar no WhatsApp"],
                     [ShieldCheck, "Feedback privado", "Sugestão enviada só para a empresa"],
                   ].map(([Icon, title, subtitle]) => (
-                    <div key={String(title)} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3">
-                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-secondary text-primary">
+                    <div key={String(title)} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
+                      <div className="grid h-10 w-10 place-items-center rounded-lg bg-secondary text-primary">
                         <Icon className="h-5 w-5" />
                       </div>
                       <div>
@@ -111,7 +111,7 @@ const Index = () => {
 
       <section className="bg-background px-5 py-16 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-5xl space-y-5">
-          <h2 className="max-w-3xl text-3xl font-black leading-tight tracking-normal text-foreground sm:text-4xl">
+          <h2 className="max-w-3xl text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
             Cada evento gera dezenas de oportunidades — e você perde todas.
           </h2>
           <div className="max-w-2xl space-y-4 text-lg leading-8 text-muted-foreground">
@@ -123,13 +123,13 @@ const Index = () => {
 
       <section id="como-funciona" className="bg-surface px-5 py-16 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-5xl space-y-9">
-          <h2 className="max-w-3xl text-3xl font-black leading-tight tracking-normal text-foreground sm:text-4xl">
+          <h2 className="max-w-3xl text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
             Simples: um QR Code no evento resolve isso.
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, index) => (
               <div key={step} className="rounded-lg border border-border bg-card p-5 text-card-foreground shadow-sm">
-                <div className="mb-5 grid h-10 w-10 place-items-center rounded-md bg-secondary text-sm font-black text-primary">
+                <div className="mb-5 grid h-10 w-10 place-items-center rounded-md bg-secondary text-sm font-bold text-primary">
                   {index + 1}
                 </div>
                 <p className="text-base font-bold leading-6">{step}</p>
@@ -152,7 +152,7 @@ const Index = () => {
 
       <section className="bg-gradient-hero px-5 py-16 text-surface-strong-foreground sm:px-8 lg:px-10">
         <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-          <h2 className="max-w-2xl text-3xl font-black leading-tight tracking-normal sm:text-4xl">
+          <h2 className="max-w-2xl text-3xl font-bold leading-tight tracking-normal sm:text-4xl">
             Comece a capturar valor dos seus eventos hoje
           </h2>
           <Button asChild variant="warm" size="touch" className="shrink-0">

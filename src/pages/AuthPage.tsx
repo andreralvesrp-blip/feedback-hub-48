@@ -58,13 +58,13 @@ const AuthPage = () => {
 
   return (
     <main className="grid min-h-screen place-items-center bg-background px-5 py-8">
-      <section className="w-full max-w-md rounded-[2rem] bg-card p-5 shadow-soft animate-soft-rise">
+      <section className="w-full max-w-md rounded-lg bg-card p-5 shadow-soft animate-soft-rise">
         <div className="mb-7 space-y-3">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
+          <div className="grid h-12 w-12 place-items-center rounded-lg bg-primary text-primary-foreground">
             <LockKeyhole className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-3xl font-black leading-tight">Área do cliente</h1>
+            <h1 className="text-3xl font-bold leading-tight">Área do cliente</h1>
             <p className="text-muted-foreground">Entre para ver experiência, orçamentos, QR Code e configurações.</p>
           </div>
         </div>
@@ -75,14 +75,14 @@ const AuthPage = () => {
           <div className="grid gap-3 pt-2">
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-14 rounded-2xl pl-11 text-base" />
+              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-14 rounded-lg pl-11 text-base" />
             </div>
-            <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Senha" className="h-14 rounded-2xl text-base" />
+            <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Senha" className="h-14 rounded-lg text-base" />
           </div>
           <Button variant="hero" size="touch" className="w-full" onClick={submit} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />} {mode === "login" ? "Entrar" : "Criar conta"}
           </Button>
-          <button className="w-full rounded-xl py-3 text-sm font-semibold text-primary" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
+          <button className="w-full rounded-lg py-3 text-sm font-semibold text-primary" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
             {mode === "login" ? "Ainda não tenho conta" : "Já tenho conta"}
           </button>
         </div>

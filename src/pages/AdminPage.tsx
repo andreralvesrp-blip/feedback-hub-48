@@ -148,7 +148,7 @@ const AdminPage = () => {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <div>
             <p className="text-sm text-muted-foreground">SaaS multi-clientes</p>
-            <h1 className="text-xl font-black leading-tight">Super admin</h1>
+            <h1 className="text-xl font-bold leading-tight">Super admin</h1>
           </div>
           <div className="flex gap-2">
             <Button asChild variant="quiet"><Link to="/app">Área cliente</Link></Button>
@@ -158,61 +158,61 @@ const AdminPage = () => {
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-5 px-4 py-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <section className="rounded-3xl bg-card p-5 shadow-soft">
+        <section className="rounded-lg bg-card p-5 shadow-soft">
           <div className="mb-5 flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><Plus className="h-5 w-5" /></div>
-            <h2 className="text-2xl font-black">Criar empresa</h2>
+            <div className="grid h-11 w-11 place-items-center rounded-lg bg-primary text-primary-foreground"><Plus className="h-5 w-5" /></div>
+            <h2 className="text-2xl font-bold">Criar empresa</h2>
           </div>
           <div className="grid gap-3">
-            <Input value={companyForm.name} onChange={(e) => setCompanyForm((f) => ({ ...f, name: e.target.value, slug: f.slug || slugify(e.target.value) }))} placeholder="Nome da empresa" className="h-12 rounded-2xl" />
-            <Input value={companyForm.slug} onChange={(e) => setCompanyForm((f) => ({ ...f, slug: slugify(e.target.value) }))} placeholder="slug-publico" className="h-12 rounded-2xl" />
-            <Input value={companyForm.alert_phone} onChange={(e) => setCompanyForm((f) => ({ ...f, alert_phone: e.target.value }))} placeholder="Telefone de alerta" className="h-12 rounded-2xl" />
-            <Input value={companyForm.googleUrl} onChange={(e) => setCompanyForm((f) => ({ ...f, googleUrl: e.target.value }))} placeholder="URL de review do Google" className="h-12 rounded-2xl" />
-            <Textarea value={companyForm.initialQuestion} onChange={(e) => setCompanyForm((f) => ({ ...f, initialQuestion: e.target.value }))} placeholder="Pergunta inicial" className="min-h-24 rounded-2xl" />
+            <Input value={companyForm.name} onChange={(e) => setCompanyForm((f) => ({ ...f, name: e.target.value, slug: f.slug || slugify(e.target.value) }))} placeholder="Nome da empresa" className="h-12 rounded-lg" />
+            <Input value={companyForm.slug} onChange={(e) => setCompanyForm((f) => ({ ...f, slug: slugify(e.target.value) }))} placeholder="slug-publico" className="h-12 rounded-lg" />
+            <Input value={companyForm.alert_phone} onChange={(e) => setCompanyForm((f) => ({ ...f, alert_phone: e.target.value }))} placeholder="Telefone de alerta" className="h-12 rounded-lg" />
+            <Input value={companyForm.googleUrl} onChange={(e) => setCompanyForm((f) => ({ ...f, googleUrl: e.target.value }))} placeholder="URL de review do Google" className="h-12 rounded-lg" />
+            <Textarea value={companyForm.initialQuestion} onChange={(e) => setCompanyForm((f) => ({ ...f, initialQuestion: e.target.value }))} placeholder="Pergunta inicial" className="min-h-24 rounded-lg" />
             <Button variant="hero" size="touch" onClick={createCompany} disabled={savingCompany}>{savingCompany && <Loader2 className="h-4 w-4 animate-spin" />} Criar empresa</Button>
           </div>
         </section>
 
-        <section className="rounded-3xl bg-card p-5 shadow-soft">
+        <section className="rounded-lg bg-card p-5 shadow-soft">
           <div className="mb-5 flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><UserPlus className="h-5 w-5" /></div>
-            <h2 className="text-2xl font-black">Criar usuário</h2>
+            <div className="grid h-11 w-11 place-items-center rounded-lg bg-primary text-primary-foreground"><UserPlus className="h-5 w-5" /></div>
+            <h2 className="text-2xl font-bold">Criar usuário</h2>
           </div>
           <div className="grid gap-3">
-            <Input value={newUserForm.email} onChange={(e) => setNewUserForm((f) => ({ ...f, email: e.target.value }))} placeholder="Email" className="h-12 rounded-2xl" />
-            <Input value={newUserForm.password} onChange={(e) => setNewUserForm((f) => ({ ...f, password: e.target.value }))} type="password" placeholder="Senha inicial" className="h-12 rounded-2xl" />
+            <Input value={newUserForm.email} onChange={(e) => setNewUserForm((f) => ({ ...f, email: e.target.value }))} placeholder="Email" className="h-12 rounded-lg" />
+            <Input value={newUserForm.password} onChange={(e) => setNewUserForm((f) => ({ ...f, password: e.target.value }))} type="password" placeholder="Senha inicial" className="h-12 rounded-lg" />
             <Select value={newUserForm.companyId} onValueChange={(value) => setNewUserForm((f) => ({ ...f, companyId: value }))}>
-              <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Empresa" /></SelectTrigger>
+              <SelectTrigger className="h-12 rounded-lg"><SelectValue placeholder="Empresa" /></SelectTrigger>
               <SelectContent>{companies.map((company) => <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>)}</SelectContent>
             </Select>
             <Select value={newUserForm.role} onValueChange={(value) => setNewUserForm((f) => ({ ...f, role: value as CompanyRole }))}>
-              <SelectTrigger className="h-12 rounded-2xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-12 rounded-lg"><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="viewer">Viewer</SelectItem><SelectItem value="company_admin">Company admin</SelectItem><SelectItem value="super_admin">Super admin</SelectItem></SelectContent>
             </Select>
             <Button variant="hero" size="touch" onClick={createUser} disabled={linkingUser}>{linkingUser && <Loader2 className="h-4 w-4 animate-spin" />} Criar e vincular</Button>
             <div className="my-2 h-px bg-border" />
-            <Input value={linkForm.userId} onChange={(e) => setLinkForm((f) => ({ ...f, userId: e.target.value }))} placeholder="ID do usuário" className="h-12 rounded-2xl" />
+            <Input value={linkForm.userId} onChange={(e) => setLinkForm((f) => ({ ...f, userId: e.target.value }))} placeholder="ID do usuário" className="h-12 rounded-lg" />
             <Select value={linkForm.companyId} onValueChange={(value) => setLinkForm((f) => ({ ...f, companyId: value }))}>
-              <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Empresa" /></SelectTrigger>
+              <SelectTrigger className="h-12 rounded-lg"><SelectValue placeholder="Empresa" /></SelectTrigger>
               <SelectContent>{companies.map((company) => <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>)}</SelectContent>
             </Select>
             <Select value={linkForm.role} onValueChange={(value) => setLinkForm((f) => ({ ...f, role: value as CompanyRole }))}>
-              <SelectTrigger className="h-12 rounded-2xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-12 rounded-lg"><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="viewer">Viewer</SelectItem><SelectItem value="company_admin">Company admin</SelectItem><SelectItem value="super_admin">Super admin</SelectItem></SelectContent>
             </Select>
             <Button variant="hero" size="touch" onClick={linkUser} disabled={linkingUser || !selectedCompany}>{linkingUser && <Loader2 className="h-4 w-4 animate-spin" />} Vincular</Button>
           </div>
         </section>
 
-        <section className="rounded-3xl bg-card p-5 shadow-soft lg:col-span-2">
+        <section className="rounded-lg bg-card p-5 shadow-soft lg:col-span-2">
           <div className="mb-5 flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><Building2 className="h-5 w-5" /></div>
-            <h2 className="text-2xl font-black">Empresas</h2>
+            <div className="grid h-11 w-11 place-items-center rounded-lg bg-primary text-primary-foreground"><Building2 className="h-5 w-5" /></div>
+            <h2 className="text-2xl font-bold">Empresas</h2>
           </div>
           <div className="grid gap-3">
-            {companies.length === 0 ? <p className="rounded-2xl bg-muted p-4 text-muted-foreground">Nenhuma empresa cadastrada.</p> : companies.map((company) => (
-              <div key={company.id} className="grid gap-3 rounded-2xl bg-muted p-4 lg:grid-cols-[1fr_1fr_auto] lg:items-center">
-                <div><p className="font-black">{company.name}</p><p className="text-sm text-muted-foreground">/avaliar/{company.slug}</p></div>
+            {companies.length === 0 ? <p className="rounded-lg bg-muted p-4 text-muted-foreground">Nenhuma empresa cadastrada.</p> : companies.map((company) => (
+              <div key={company.id} className="grid gap-3 rounded-lg bg-muted p-4 lg:grid-cols-[1fr_1fr_auto] lg:items-center">
+                <div><p className="font-bold">{company.name}</p><p className="text-sm text-muted-foreground">/avaliar/{company.slug}</p></div>
                 <div className="text-sm text-muted-foreground">{company.initial_review_question || "—"}</div>
                 <Button asChild variant="quiet"><Link to={`/app?company=${company.id}`}><Shield className="h-4 w-4" /> Acessar painel</Link></Button>
               </div>
