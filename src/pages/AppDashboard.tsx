@@ -69,14 +69,16 @@ const AppDashboard = () => {
 
   const stats = useMemo(() => {
     const total = filtered.responses.length;
-    const happy = filtered.responses.filter((r) => r.score >= 8).length;
-    const low = filtered.responses.filter((r) => r.score <= 7).length;
-    const nps = total ? Math.round(((happy - low) / total) * 100) : 0;
+    const loved = filtered.responses.filter((r) => r.experience_rating === "loved").length;
+    const ok = filtered.responses.filter((r) => r.experience_rating === "ok").length;
+    const improve = filtered.responses.filter((r) => r.experience_rating === "improve").length;
+    const experienceIndex = total ? Math.round((loved / total) * 100) : 0;
     return {
-      nps,
+      experienceIndex,
       total,
-      low,
-      happy,
+      loved,
+      ok,
+      improve,
       budgets: filtered.budgets.length,
       google: filtered.responses.filter((r) => r.wants_google_review || r.redirected_to_google).length,
     };
@@ -84,7 +86,7 @@ const AppDashboard = () => {
 
   const loadData = async (companyId: string) => {
     const [res, bud, hooks] = await Promise.all([
-      (supabase as any).from("nps_responses").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
+      (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
       (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
       (supabase as any).from("webhooks").select("*").eq("company_id", companyId).order("created_at", { ascending: false }),
     ]);
@@ -146,7 +148,7 @@ const AppDashboard = () => {
   };
 
   const updateResponse = async (id: string, status: string) => {
-    await (supabase as any).from("nps_responses").update({ status }).eq("id", id);
+    await (supabase as any).from("experience_responses").update({ status }).eq("id", id);
     setResponses((items) => items.map((i) => i.id === id ? { ...i, status } : i));
   };
 
