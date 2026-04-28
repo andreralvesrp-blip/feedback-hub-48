@@ -5,7 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -95,10 +95,8 @@ const AppDashboard = () => {
     };
   }, [responses, budgets]);
 
-  const fixedMonthOptions = useMemo(
-    () => monthOptions.filter((month) => month.month_start !== currentMonthStart),
-    [monthOptions, currentMonthStart],
-  );
+  const selectedManualMonth = periodValue === "current" ? undefined : periodValue;
+  const activeMonthStart = periodValue === "current" ? currentMonthStart : periodValue;
 
   const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
