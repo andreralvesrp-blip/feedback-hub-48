@@ -1,14 +1,16 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import AppDashboard from "./pages/AppDashboard.tsx";
-import AuthPage from "./pages/AuthPage.tsx";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import PublicPanel from "./pages/PublicPanel.tsx";
-import PublicReview from "./pages/PublicReview.tsx";
+
+const AppDashboard = lazy(() => import("./pages/AppDashboard.tsx"));
+const AuthPage = lazy(() => import("./pages/AuthPage.tsx"));
+const Index = lazy(() => import("./pages/Index.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const PublicPanel = lazy(() => import("./pages/PublicPanel.tsx"));
+const PublicReview = lazy(() => import("./pages/PublicReview.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -18,15 +20,17 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/app" element={<AppDashboard />} />
-          <Route path="/avaliar/:slug" element={<PublicReview />} />
-          <Route path="/painel/:slug" element={<PublicPanel />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<main className="min-h-screen bg-background" />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/app" element={<AppDashboard />} />
+            <Route path="/avaliar/:slug" element={<PublicReview />} />
+            <Route path="/painel/:slug" element={<PublicPanel />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
