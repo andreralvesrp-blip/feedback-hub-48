@@ -47,6 +47,14 @@ All colors MUST be HSL.
     --surface-strong-foreground: 42 38% 97%;
     --brand: 164 76% 28%;
     --brand-soft: 164 50% 90%;
+    --score-low: 42 16% 92%;
+    --score-low-foreground: 218 25% 20%;
+    --score-mid: 43 85% 90%;
+    --score-mid-foreground: 38 48% 24%;
+    --score-good: 146 52% 88%;
+    --score-good-foreground: 155 43% 22%;
+    --score-great: 158 58% 82%;
+    --score-great-foreground: 164 62% 18%;
     --gradient-hero: linear-gradient(135deg, hsl(165 43% 18%) 0%, hsl(164 76% 28%) 52%, hsl(38 91% 56%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--secondary) / 0.72) 100%);
     --shadow-soft: 0 18px 50px -26px hsl(218 35% 12% / 0.34);
@@ -142,5 +150,30 @@ All colors MUST be HSL.
 
   .tap-highlight-none {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .score-scroll-fade {
+    mask-image: linear-gradient(90deg, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
+  }
+
+  .score-low {
+    background: hsl(var(--score-low));
+    color: hsl(var(--score-low-foreground));
+  }
+
+  .score-mid {
+    background: hsl(var(--score-mid));
+    color: hsl(var(--score-mid-foreground));
+  }
+
+  .score-good {
+    background: hsl(var(--score-good));
+    color: hsl(var(--score-good-foreground));
+  }
+
+  .score-great {
+    background: hsl(var(--score-great));
+    color: hsl(var(--score-great-foreground));
   }
 }
