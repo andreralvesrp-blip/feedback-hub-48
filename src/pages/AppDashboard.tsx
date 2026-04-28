@@ -67,6 +67,7 @@ const AppDashboard = () => {
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [monthOptions, setMonthOptions] = useState<MonthOption[]>([]);
   const [periodValue, setPeriodValue] = useState<PeriodValue>("current");
+  const [currentMonthStart, setCurrentMonthStart] = useState(getCurrentMonthStart);
   const [experienceFilter, setExperienceFilter] = useState<"all" | ExperienceRating>("all");
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
@@ -95,8 +96,8 @@ const AppDashboard = () => {
   }, [responses, budgets]);
 
   const fixedMonthOptions = useMemo(
-    () => monthOptions.filter((month) => month.month_start !== getCurrentMonthStart()),
-    [monthOptions],
+    () => monthOptions.filter((month) => month.month_start !== currentMonthStart),
+    [monthOptions, currentMonthStart],
   );
 
   const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
@@ -149,6 +150,32 @@ const AppDashboard = () => {
     };
     init();
   }, [navigate]);
+
+  useEffect(() => {
+    const syncCurrentMonth = () => {
+      const nextCurrentMonth = getCurrentMonthStart();
+      if (nextCurrentMonth === currentMonthStart) return;
+
+      setCurrentMonthStart(nextCurrentMonth);
+      if (periodValue === "current" && company) {
+        void loadData(company.id, nextCurrentMonth);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) syncCurrentMonth();
+    };
+
+    window.addEventListener("focus", syncCurrentMonth);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    const timer = window.setInterval(syncCurrentMonth, 30000);
+
+    return () => {
+      window.removeEventListener("focus", syncCurrentMonth);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.clearInterval(timer);
+    };
+  }, [company, currentMonthStart, periodValue]);
 
   const saveCompany = async () => {
     if (!user) return;
