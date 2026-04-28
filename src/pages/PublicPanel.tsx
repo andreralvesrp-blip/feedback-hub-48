@@ -67,7 +67,7 @@ const PublicPanel = () => {
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["Índice de Experiência", `${metrics.experience_index}%`],
+            ["Índice de Experiência", metrics.experience_index],
             ["Total respostas", metrics.total_responses],
             ["Adorei", metrics.loved_count],
             ["Foi ok", metrics.ok_count],
