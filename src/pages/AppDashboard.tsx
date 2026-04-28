@@ -63,9 +63,11 @@ const AppDashboard = () => {
   const [responses, setResponses] = useState<ExperienceResponse[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
-  const [period, setPeriod] = useState<"month" | "thirty">("thirty");
+  const [monthOptions, setMonthOptions] = useState<MonthOption[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthStart());
   const [experienceFilter, setExperienceFilter] = useState<"all" | ExperienceRating>("all");
   const [loading, setLoading] = useState(true);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter" });
   const [webhookUrl, setWebhookUrl] = useState("");
@@ -73,20 +75,11 @@ const AppDashboard = () => {
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
   const panelUrl = company ? `${window.location.origin}/painel/${company.slug}?token=${company.public_panel_token}` : "";
 
-  const filtered = useMemo(() => {
-    const now = new Date();
-    const start = period === "thirty" ? new Date(now.getTime() - 30 * 86400000) : new Date(now.getFullYear(), now.getMonth(), 1);
-    return {
-      responses: responses.filter((r) => new Date(r.created_at) >= start),
-      budgets: budgets.filter((b) => new Date(b.created_at) >= start),
-    };
-  }, [responses, budgets, period]);
-
   const stats = useMemo(() => {
-    const total = filtered.responses.length;
-    const loved = filtered.responses.filter((r) => r.experience_rating === "loved").length;
-    const ok = filtered.responses.filter((r) => r.experience_rating === "ok").length;
-    const improve = filtered.responses.filter((r) => r.experience_rating === "improve").length;
+    const total = responses.length;
+    const loved = responses.filter((r) => r.experience_rating === "loved").length;
+    const ok = responses.filter((r) => r.experience_rating === "ok").length;
+    const improve = responses.filter((r) => r.experience_rating === "improve").length;
     const experienceIndex = total ? Math.round(((loved - improve) / total) * 100) : 0;
     return {
       experienceIndex,
@@ -94,10 +87,10 @@ const AppDashboard = () => {
       loved,
       ok,
       improve,
-      budgets: filtered.budgets.length,
-      google: filtered.responses.filter((r) => r.wants_google_review || r.redirected_to_google).length,
+      budgets: budgets.length,
+      google: responses.filter((r) => r.wants_google_review || r.redirected_to_google).length,
     };
-  }, [filtered]);
+  }, [responses, budgets]);
 
   const loadData = async (companyId: string) => {
     const [res, bud, hooks] = await Promise.all([
