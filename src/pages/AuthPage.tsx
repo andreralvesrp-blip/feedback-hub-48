@@ -44,7 +44,7 @@ const AuthPage = () => {
     const result = await supabase.auth.signInWithPassword(credentials);
     setLoading(false);
     if (result.error) {
-      toast.error("Acesso ainda não liberado. Aguarde aprovação.");
+      toast.error("E-mail ou senha inválidos.");
       return;
     }
     await routeAfterLogin();

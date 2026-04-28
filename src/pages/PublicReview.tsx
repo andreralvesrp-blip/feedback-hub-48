@@ -153,7 +153,7 @@ const PublicReview = () => {
     if (!experienceId) return;
     if (company?.google_reviews_url) {
       setSubmitting(true);
-      const { error } = await (supabase as any).rpc("mark_experience_google_review_intent", { _response_id: experienceId });
+      const { error } = await (supabase as any).rpc("mark_experience_google_review_intent", { _response_id: experienceId, _company_slug: slug });
       setSubmitting(false);
       if (error) {
         toast.error(error.message || "Não foi possível registrar sua escolha.");
@@ -167,7 +167,7 @@ const PublicReview = () => {
   const handleFinalGoogleReview = async () => {
     if (!responseId || !company?.google_reviews_url) return;
     setSubmitting(true);
-    const { error } = await (supabase as any).rpc("mark_experience_google_review_intent", { _response_id: responseId });
+    const { error } = await (supabase as any).rpc("mark_experience_google_review_intent", { _response_id: responseId, _company_slug: slug });
     setSubmitting(false);
     if (error) {
       toast.error(error.message || "Não foi possível registrar sua escolha.");

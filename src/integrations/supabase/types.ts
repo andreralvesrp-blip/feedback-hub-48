@@ -426,7 +426,7 @@ export type Database = {
       is_valid_cnpj: { Args: { _cnpj: string }; Returns: boolean }
       is_valid_cpf: { Args: { _cpf: string }; Returns: boolean }
       mark_experience_google_review_intent: {
-        Args: { _response_id: string }
+        Args: { _company_slug: string; _response_id: string }
         Returns: boolean
       }
       submit_access_request: {
@@ -462,6 +462,7 @@ export type Database = {
         }
         Returns: string
       }
+      user_has_any_company: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       access_request_status: "pending" | "approved" | "rejected"
