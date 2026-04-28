@@ -72,7 +72,7 @@ const AppDashboard = () => {
     const loved = filtered.responses.filter((r) => r.experience_rating === "loved").length;
     const ok = filtered.responses.filter((r) => r.experience_rating === "ok").length;
     const improve = filtered.responses.filter((r) => r.experience_rating === "improve").length;
-    const experienceIndex = total ? Math.round((loved / total) * 100) : 0;
+    const experienceIndex = total ? Math.round(((loved / total) - (improve / total)) * 100) : 0;
     return {
       experienceIndex,
       total,
@@ -233,7 +233,7 @@ const AppDashboard = () => {
           <TabsContent value="dashboard" className="space-y-5">
             <div className="flex justify-end"><Select value={period} onValueChange={(v) => setPeriod(v as "month" | "thirty")}><SelectTrigger className="w-48 rounded-2xl"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(periods).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
-              {[["Índice de Experiência", `${stats.experienceIndex}%`], ["Respostas", stats.total], ["Adorei", stats.loved], ["Foi ok", stats.ok], ["Pode melhorar", stats.improve], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
+              {[["Índice de Experiência", stats.experienceIndex], ["Respostas", stats.total], ["Adorei", stats.loved], ["Foi ok", stats.ok], ["Pode melhorar", stats.improve], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
                 <div key={label} className="rounded-3xl bg-card p-4 shadow-soft"><p className="text-sm text-muted-foreground">{label}</p><p className="text-3xl font-black">{value}</p></div>
               ))}
             </div>
