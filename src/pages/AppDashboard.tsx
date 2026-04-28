@@ -33,7 +33,6 @@ const interestLabel: Record<string, string> = {
 };
 
 const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perdido"];
-const responseStatus = ["novo", "visto", "resolvido"];
 const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const budgetStatusLabels: Record<string, string> = { novo: "Novo", contatado: "Contatado", orcamento_enviado: "Orçamento enviado", fechado: "Fechado", perdido: "Perdido" };
@@ -204,11 +203,6 @@ const AppDashboard = () => {
     setCompany(result.data);
     toast.success("Configurações salvas.");
     await loadData(result.data.id);
-  };
-
-  const updateResponse = async (id: string, status: string) => {
-    await (supabase as any).from("experience_responses").update({ status }).eq("id", id);
-    setResponses((items) => items.map((i) => i.id === id ? { ...i, status } : i));
   };
 
   const updateBudget = async (id: string, status: string) => {
