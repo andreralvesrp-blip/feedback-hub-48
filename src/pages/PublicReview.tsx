@@ -291,7 +291,7 @@ const PublicReview = () => {
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Avaliar no Google
               </Button>
-              <Button variant="quiet" size="touch" className="w-full" onClick={() => setStep("done")} disabled={submitting}>
+              <Button variant="quiet" size="touch" className="w-full" onClick={() => { setWantsGoogle(false); setStep("done"); }} disabled={submitting}>
                 Agora não
               </Button>
             </div>
