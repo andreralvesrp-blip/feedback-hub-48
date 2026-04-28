@@ -21,7 +21,12 @@ type PublicCompany = {
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Informe seu nome").max(120),
-  whatsapp: z.string().trim().regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, "Informe um WhatsApp válido com DDD"),
+  whatsapp: z.string().trim().regex(/^\(\d{2}\) \d \d{4}-\d{4}$/, "Informe um WhatsApp válido com DDD"),
+});
+
+const privateContactSchema = z.object({
+  name: z.string().trim().max(120),
+  whatsapp: z.string().trim().refine((value) => !value || /^\(\d{2}\) \d \d{4}-\d{4}$/.test(value), "Informe um WhatsApp válido com DDD"),
 });
 
 const sanitizePhone = (value: string) => value.replace(/\D/g, "");
@@ -29,12 +34,14 @@ const sanitizePhone = (value: string) => value.replace(/\D/g, "");
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
   const area = digits.slice(0, 2);
-  const first = digits.length > 10 ? digits.slice(2, 7) : digits.slice(2, 6);
-  const second = digits.length > 10 ? digits.slice(7, 11) : digits.slice(6, 10);
+  const mobileDigit = digits.slice(2, 3);
+  const first = digits.slice(3, 7);
+  const second = digits.slice(7, 11);
 
   if (digits.length <= 2) return area ? `(${area}` : "";
-  if (!second) return `(${area}) ${first}`;
-  return `(${area}) ${first}-${second}`;
+  if (digits.length <= 3) return `(${area}) ${mobileDigit}`;
+  if (!second) return `(${area}) ${mobileDigit} ${first}`;
+  return `(${area}) ${mobileDigit} ${first}-${second}`;
 };
 
 const PublicReview = () => {
@@ -52,7 +59,7 @@ const PublicReview = () => {
 
   const isHappy = score !== null && score >= 9;
   const progress = useMemo(() => {
-    const order = isHappy ? ["nps", "thanks", "google", "budget", "done"] : ["nps", "private", "contact", "done"];
+    const order = isHappy ? ["nps", "thanks", "budget", "google", "done"] : ["nps", "private", "contact", "done"];
     return Math.max(18, ((order.indexOf(step) + 1) / order.length) * 100);
   }, [isHappy, step]);
 
@@ -79,8 +86,8 @@ const PublicReview = () => {
       _company_slug: slug,
       _score: score,
       _comment: comment,
-      _name: name,
-      _whatsapp: whatsapp,
+      _name: name.trim(),
+      _whatsapp: sanitizePhone(whatsapp),
       _wants_google_review: options?.google ?? wantsGoogle,
       _redirected_to_google: options?.redirected ?? false,
     });
@@ -105,17 +112,27 @@ const PublicReview = () => {
   };
 
   const handlePrivateSubmit = async () => {
+    const parsed = privateContactSchema.safeParse({ name, whatsapp });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message || "Confira seus dados.");
+      return;
+    }
     const id = await submitNps();
     if (id) setStep("done");
   };
 
   const handleGoogleContinue = async () => {
-    const id = await submitNps({ google: wantsGoogle, redirected: wantsGoogle });
-    if (!id) return;
     if (wantsGoogle && company?.google_reviews_url) {
+      setSubmitting(true);
+      const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: responseId });
+      setSubmitting(false);
+      if (error) {
+        toast.error(error.message || "Não foi possível registrar sua escolha.");
+        return;
+      }
       window.open(company.google_reviews_url, "_blank", "noopener,noreferrer");
     }
-    setStep("budget");
+    setStep("done");
   };
 
   const handleFinalGoogleReview = async () => {
@@ -136,6 +153,8 @@ const PublicReview = () => {
       toast.error(parsed.error.issues[0]?.message || "Confira seus dados.");
       return;
     }
+    const npsId = responseId ?? (await submitNps({ google: false, redirected: false }));
+    if (!npsId) return;
     setSubmitting(true);
     const { error } = await (supabase as any).rpc("submit_budget_request", {
       _company_slug: slug,
@@ -143,14 +162,14 @@ const PublicReview = () => {
       _whatsapp: sanitizePhone(parsed.data.whatsapp),
       _interest: "outro",
       _nps_score: score,
-      _nps_response_id: responseId,
+      _nps_response_id: npsId,
     });
     setSubmitting(false);
     if (error) {
       toast.error(error.message || "Não foi possível enviar o pedido.");
       return;
     }
-    setStep("done");
+    setStep("google");
   };
 
   if (loading) {
@@ -233,7 +252,7 @@ const PublicReview = () => {
               <HeartHandshake className="h-10 w-10 text-primary" />
               <h1 className="text-2xl font-black leading-tight">Se preferir, podemos te chamar no WhatsApp para entender melhor sua experiência.</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome (opcional)" className="h-14 rounded-2xl text-base" />
-              <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="WhatsApp (opcional)" className="h-14 rounded-2xl text-base" />
+              <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="WhatsApp (opcional)" className="h-14 rounded-2xl text-base" />
               <Button variant="hero" size="touch" className="w-full" onClick={handlePrivateSubmit} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Enviar feedback
               </Button>
@@ -259,7 +278,7 @@ const PublicReview = () => {
               </label>
               <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem nossa empresa com mais confiança.</p>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Continuar
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Finalizar
               </Button>
             </div>
           )}
@@ -269,7 +288,7 @@ const PublicReview = () => {
               <p className="font-bold text-primary">Se você também estiver planejando um evento, podemos te ajudar 😊</p>
               <h1 className="text-2xl font-black leading-tight">Quer receber nosso contato?</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="h-14 rounded-2xl text-base" />
-              <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={15} placeholder="WhatsApp com DDD" className="h-14 rounded-2xl text-base" />
+              <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="WhatsApp com DDD" className="h-14 rounded-2xl text-base" />
               <Button variant="warm" size="touch" className="w-full" onClick={submitBudget} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Receber contato
               </Button>
