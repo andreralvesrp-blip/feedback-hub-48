@@ -18,11 +18,13 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          experience_rating:
+            | Database["public"]["Enums"]["experience_rating"]
+            | null
+          experience_response_id: string | null
           id: string
           interest: Database["public"]["Enums"]["interest_type"]
           name: string
-          nps_response_id: string | null
-          nps_score: number | null
           status: Database["public"]["Enums"]["budget_status"]
           updated_at: string
           whatsapp: string
@@ -30,11 +32,13 @@ export type Database = {
         Insert: {
           company_id: string
           created_at?: string
+          experience_rating?:
+            | Database["public"]["Enums"]["experience_rating"]
+            | null
+          experience_response_id?: string | null
           id?: string
           interest: Database["public"]["Enums"]["interest_type"]
           name: string
-          nps_response_id?: string | null
-          nps_score?: number | null
           status?: Database["public"]["Enums"]["budget_status"]
           updated_at?: string
           whatsapp: string
@@ -42,11 +46,13 @@ export type Database = {
         Update: {
           company_id?: string
           created_at?: string
+          experience_rating?:
+            | Database["public"]["Enums"]["experience_rating"]
+            | null
+          experience_response_id?: string | null
           id?: string
           interest?: Database["public"]["Enums"]["interest_type"]
           name?: string
-          nps_response_id?: string | null
-          nps_score?: number | null
           status?: Database["public"]["Enums"]["budget_status"]
           updated_at?: string
           whatsapp?: string
@@ -60,10 +66,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "budget_requests_nps_response_id_fkey"
-            columns: ["nps_response_id"]
+            foreignKeyName: "budget_requests_experience_response_id_fkey"
+            columns: ["experience_response_id"]
             isOneToOne: false
-            referencedRelation: "nps_responses"
+            referencedRelation: "experience_responses"
             referencedColumns: ["id"]
           },
         ]
@@ -125,44 +131,41 @@ export type Database = {
         }
         Relationships: []
       }
-      nps_responses: {
+      experience_responses: {
         Row: {
-          classification: Database["public"]["Enums"]["nps_classification"]
           comment: string | null
           company_id: string
           created_at: string
+          experience_rating: Database["public"]["Enums"]["experience_rating"]
           id: string
           name: string | null
           redirected_to_google: boolean
-          score: number
           status: Database["public"]["Enums"]["response_status"]
           updated_at: string
           wants_google_review: boolean
           whatsapp: string | null
         }
         Insert: {
-          classification: Database["public"]["Enums"]["nps_classification"]
           comment?: string | null
           company_id: string
           created_at?: string
+          experience_rating: Database["public"]["Enums"]["experience_rating"]
           id?: string
           name?: string | null
           redirected_to_google?: boolean
-          score: number
           status?: Database["public"]["Enums"]["response_status"]
           updated_at?: string
           wants_google_review?: boolean
           whatsapp?: string | null
         }
         Update: {
-          classification?: Database["public"]["Enums"]["nps_classification"]
           comment?: string | null
           company_id?: string
           created_at?: string
+          experience_rating?: Database["public"]["Enums"]["experience_rating"]
           id?: string
           name?: string | null
           redirected_to_google?: boolean
-          score?: number
           status?: Database["public"]["Enums"]["response_status"]
           updated_at?: string
           wants_google_review?: boolean
@@ -265,34 +268,37 @@ export type Database = {
         Returns: {
           budget_requests: number
           company_name: string
+          experience_index: number
+          feedbacks: number
           google_redirects: number
-          negative_feedbacks: number
-          nps: number
+          improve_count: number
+          loved_count: number
+          ok_count: number
           total_responses: number
         }[]
       }
-      mark_nps_google_review_intent: {
+      mark_experience_google_review_intent: {
         Args: { _response_id: string }
         Returns: boolean
       }
       submit_budget_request: {
         Args: {
           _company_slug: string
+          _experience_rating?: Database["public"]["Enums"]["experience_rating"]
+          _experience_response_id?: string
           _interest: Database["public"]["Enums"]["interest_type"]
           _name: string
-          _nps_response_id?: string
-          _nps_score?: number
           _whatsapp: string
         }
         Returns: string
       }
-      submit_nps_response: {
+      submit_experience_response: {
         Args: {
           _comment?: string
           _company_slug: string
+          _experience_rating: Database["public"]["Enums"]["experience_rating"]
           _name?: string
           _redirected_to_google?: boolean
-          _score: number
           _wants_google_review?: boolean
           _whatsapp?: string
         }
@@ -307,13 +313,13 @@ export type Database = {
         | "fechado"
         | "perdido"
       company_plan: "starter" | "pro" | "premium"
+      experience_rating: "loved" | "ok" | "improve"
       interest_type:
         | "festa_infantil"
         | "casamento"
         | "evento_corporativo"
         | "servico_para_evento"
         | "outro"
-      nps_classification: "detrator" | "neutro" | "promotor"
       response_status: "novo" | "visto" | "resolvido"
     }
     CompositeTypes: {
@@ -450,6 +456,7 @@ export const Constants = {
         "perdido",
       ],
       company_plan: ["starter", "pro", "premium"],
+      experience_rating: ["loved", "ok", "improve"],
       interest_type: [
         "festa_infantil",
         "casamento",
@@ -457,7 +464,6 @@ export const Constants = {
         "servico_para_evento",
         "outro",
       ],
-      nps_classification: ["detrator", "neutro", "promotor"],
       response_status: ["novo", "visto", "resolvido"],
     },
   },

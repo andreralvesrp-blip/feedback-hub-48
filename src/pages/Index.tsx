@@ -15,7 +15,7 @@ const Index = () => {
               </div>
               <div>
                 <p className="text-sm font-semibold leading-tight">Captura Eventos</p>
-                <p className="text-xs text-surface-strong-foreground/70">NPS, Google e orçamentos</p>
+                <p className="text-xs text-surface-strong-foreground/70">Experiência, Google e orçamentos</p>
               </div>
             </div>
             <Button asChild variant="quiet" size="sm" className="bg-background/15 text-surface-strong-foreground hover:bg-background/20">
@@ -34,7 +34,7 @@ const Index = () => {
                   Transforme cada QR Code em avaliação, melhoria e orçamento.
                 </h1>
                 <p className="max-w-xl text-lg leading-8 text-surface-strong-foreground/78">
-                  Uma plataforma mobile-first para empresas locais coletarem NPS, direcionarem clientes satisfeitos ao Google e receberem pedidos de orçamento sem fricção.
+                  Uma plataforma mobile-first para empresas locais entenderem a experiência do cliente, direcionarem pessoas satisfeitas ao Google e receberem pedidos de orçamento sem fricção.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -54,7 +54,7 @@ const Index = () => {
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Hoje</p>
-                    <p className="text-2xl font-black">NPS 84</p>
+                    <p className="text-2xl font-black">Experiência 84%</p>
                   </div>
                   <div className="rounded-2xl bg-brand-soft p-3 text-primary">
                     <BarChart3 className="h-6 w-6" />

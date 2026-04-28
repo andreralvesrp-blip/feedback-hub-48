@@ -12,8 +12,9 @@ import { toast } from "sonner";
 
 type SessionUser = { id: string; email?: string };
 type Company = { id: string; owner_user_id: string; name: string; slug: string; logo_url: string | null; segment: string | null; whatsapp: string | null; google_reviews_url: string | null; responsible_name: string | null; login_email: string | null; alert_phone: string | null; plan: string; public_panel_token: string; };
-type Nps = { id: string; created_at: string; score: number; classification: string; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
-type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; nps_score: number | null; status: string; };
+type ExperienceRating = "loved" | "ok" | "improve";
+type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
+type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
 type Webhook = { id: string; name: string; url: string; is_active: boolean; };
 
 const companySchema = z.object({
@@ -32,6 +33,8 @@ const interestLabel: Record<string, string> = {
 const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perdido"];
 const responseStatus = ["novo", "visto", "resolvido"];
 const periods = { month: "Mês fechado", thirty: "Últimos 30 dias" };
+const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Pode melhorar" };
+const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Pode melhorar" };
 
 const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
@@ -42,10 +45,11 @@ const AppDashboard = () => {
   const qrRef = useRef<SVGSVGElement | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
-  const [responses, setResponses] = useState<Nps[]>([]);
+  const [responses, setResponses] = useState<ExperienceResponse[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [period, setPeriod] = useState<"month" | "thirty">("thirty");
+  const [experienceFilter, setExperienceFilter] = useState<"all" | ExperienceRating>("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter" });
@@ -65,14 +69,16 @@ const AppDashboard = () => {
 
   const stats = useMemo(() => {
     const total = filtered.responses.length;
-    const happy = filtered.responses.filter((r) => r.score >= 8).length;
-    const low = filtered.responses.filter((r) => r.score <= 7).length;
-    const nps = total ? Math.round(((happy - low) / total) * 100) : 0;
+    const loved = filtered.responses.filter((r) => r.experience_rating === "loved").length;
+    const ok = filtered.responses.filter((r) => r.experience_rating === "ok").length;
+    const improve = filtered.responses.filter((r) => r.experience_rating === "improve").length;
+    const experienceIndex = total ? Math.round((loved / total) * 100) : 0;
     return {
-      nps,
+      experienceIndex,
       total,
-      low,
-      happy,
+      loved,
+      ok,
+      improve,
       budgets: filtered.budgets.length,
       google: filtered.responses.filter((r) => r.wants_google_review || r.redirected_to_google).length,
     };
@@ -80,7 +86,7 @@ const AppDashboard = () => {
 
   const loadData = async (companyId: string) => {
     const [res, bud, hooks] = await Promise.all([
-      (supabase as any).from("nps_responses").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
+      (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
       (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
       (supabase as any).from("webhooks").select("*").eq("company_id", companyId).order("created_at", { ascending: false }),
     ]);
@@ -142,7 +148,7 @@ const AppDashboard = () => {
   };
 
   const updateResponse = async (id: string, status: string) => {
-    await (supabase as any).from("nps_responses").update({ status }).eq("id", id);
+    await (supabase as any).from("experience_responses").update({ status }).eq("id", id);
     setResponses((items) => items.map((i) => i.id === id ? { ...i, status } : i));
   };
 
@@ -182,6 +188,19 @@ const AppDashboard = () => {
     URL.revokeObjectURL(url);
   };
 
+  const downloadResponsesCsv = () => {
+    const rows = responses.map((r) => [formatDate(r.created_at), experienceLabels[r.experience_rating], r.comment || "", r.name || "", r.whatsapp || "", "QR", r.wants_google_review || r.redirected_to_google ? "sim" : "não"]);
+    const csv = [["Data", "Experiência", "Comentário", "Nome", "WhatsApp", "Origem", "Google"], ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `experiencias-${company?.slug || "empresa"}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate("/login", { replace: true });
@@ -213,20 +232,20 @@ const AppDashboard = () => {
 
           <TabsContent value="dashboard" className="space-y-5">
             <div className="flex justify-end"><Select value={period} onValueChange={(v) => setPeriod(v as "month" | "thirty")}><SelectTrigger className="w-48 rounded-2xl"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(periods).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-              {[["NPS", stats.nps], ["Respostas", stats.total], ["0–7", stats.low], ["8–10", stats.happy], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
+              {[["Índice de Experiência", `${stats.experienceIndex}%`], ["Respostas", stats.total], ["Adorei", stats.loved], ["Foi ok", stats.ok], ["Pode melhorar", stats.improve], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
                 <div key={label} className="rounded-3xl bg-card p-4 shadow-soft"><p className="text-sm text-muted-foreground">{label}</p><p className="text-3xl font-black">{value}</p></div>
               ))}
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
-              <PanelList title="Últimos feedbacks" empty="Nenhum feedback ainda.">{responses.slice(0, 5).map((r) => <Row key={r.id} title={`${r.score} · ${r.classification}`} subtitle={r.comment || "Sem comentário"} meta={formatDate(r.created_at)} />)}</PanelList>
+              <PanelList title="Últimos feedbacks" empty="Nenhum feedback ainda.">{responses.slice(0, 5).map((r) => <Row key={r.id} title={experienceLabels[r.experience_rating]} subtitle={r.comment || "Sem comentário"} meta={formatDate(r.created_at)} />)}</PanelList>
               <PanelList title="Últimos leads" empty="Nenhum orçamento ainda.">{budgets.slice(0, 5).map((b) => <Row key={b.id} title={b.name} subtitle={interestLabel[b.interest] || b.interest} meta={formatDate(b.created_at)} />)}</PanelList>
             </div>
           </TabsContent>
 
-          <TabsContent value="responses"><DataCard title="Respostas">{responses.length === 0 ? <Empty /> : responses.map((r) => <div key={r.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_0.5fr_0.8fr_1.5fr_0.8fr_0.8fr_0.8fr]"><Cell label="Data" value={formatDate(r.created_at)} /><Cell label="Nota" value={String(r.score)} /><Cell label="Classificação" value={r.classification} /><Cell label="Comentário" value={r.comment || "—"} /><Cell label="Contato" value={`${r.name || "—"} ${r.whatsapp || ""}`} /><Cell label="Google" value={r.wants_google_review ? "Sim" : "Não"} /><Select value={r.status} onValueChange={(v) => updateResponse(r.id, v)}><SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{responseStatus.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>)}</DataCard></TabsContent>
+          <TabsContent value="responses"><DataCard title="Respostas" action={<><Select value={experienceFilter} onValueChange={(v) => setExperienceFilter(v as "all" | ExperienceRating)}><SelectTrigger className="w-44 rounded-2xl"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(experienceFilters).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={downloadResponsesCsv}><Download className="h-4 w-4" /> CSV</Button></>}>{responses.length === 0 ? <Empty /> : responses.filter((r) => experienceFilter === "all" || r.experience_rating === experienceFilter).map((r) => <div key={r.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_0.8fr_1.5fr_0.8fr_0.8fr_0.8fr]"><Cell label="Data" value={formatDate(r.created_at)} /><Cell label="Experiência" value={experienceLabels[r.experience_rating]} /><Cell label="Comentário" value={r.comment || "—"} /><Cell label="Contato" value={`${r.name || "—"} ${r.whatsapp || ""}`} /><Cell label="Google" value={r.wants_google_review || r.redirected_to_google ? "Sim" : "Não"} /><Select value={r.status} onValueChange={(v) => updateResponse(r.id, v)}><SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{responseStatus.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>)}</DataCard></TabsContent>
 
-          <TabsContent value="budgets"><DataCard title="Orçamentos">{budgets.length === 0 ? <Empty /> : budgets.map((b) => <div key={b.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_1fr_1fr_1fr_0.6fr_1fr_0.8fr]"><Cell label="Data" value={formatDate(b.created_at)} /><Cell label="Nome" value={b.name} /><Cell label="WhatsApp" value={b.whatsapp} /><Cell label="Interesse" value={interestLabel[b.interest] || b.interest} /><Cell label="NPS" value={String(b.nps_score ?? "—")} /><Select value={b.status} onValueChange={(v) => updateBudget(b.id, v)}><SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{budgetStatus.map((s) => <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>)}</SelectContent></Select><Button asChild variant="hero"><a href={`https://wa.me/${cleanPhone(b.whatsapp)}`} target="_blank" rel="noreferrer">Chamar</a></Button></div>)}</DataCard></TabsContent>
+          <TabsContent value="budgets"><DataCard title="Orçamentos">{budgets.length === 0 ? <Empty /> : budgets.map((b) => <div key={b.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_1fr_1fr_1fr_0.8fr_1fr_0.8fr]"><Cell label="Data" value={formatDate(b.created_at)} /><Cell label="Nome" value={b.name} /><Cell label="WhatsApp" value={b.whatsapp} /><Cell label="Interesse" value={interestLabel[b.interest] || b.interest} /><Cell label="Experiência" value={b.experience_rating ? experienceLabels[b.experience_rating] : "—"} /><Select value={b.status} onValueChange={(v) => updateBudget(b.id, v)}><SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger><SelectContent>{budgetStatus.map((s) => <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>)}</SelectContent></Select><Button asChild variant="hero"><a href={`https://wa.me/${cleanPhone(b.whatsapp)}`} target="_blank" rel="noreferrer">Chamar</a></Button></div>)}</DataCard></TabsContent>
 
           <TabsContent value="qr" className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
             <section className="rounded-3xl bg-card p-5 shadow-soft"><QRCodeSVG ref={qrRef} value={reviewUrl} size={220} level="H" className="mx-auto h-auto w-full max-w-[220px]" /><div className="mt-5 grid gap-3"><Button variant="hero" size="touch" onClick={() => copy(reviewUrl)}><Copy className="h-4 w-4" /> Copiar link</Button><Button variant="outline" size="touch" onClick={downloadQr}><Download className="h-4 w-4" /> Download do QR</Button></div></section>
@@ -247,7 +266,7 @@ const AppDashboard = () => {
 
 const PanelList = ({ title, empty, children }: { title: string; empty: string; children: React.ReactNode }) => <section className="rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-3 text-xl font-black">{title}</h2><div className="space-y-3">{children || <p className="text-muted-foreground">{empty}</p>}</div></section>;
 const Row = ({ title, subtitle, meta }: { title: string; subtitle: string; meta: string }) => <div className="rounded-2xl bg-muted p-3"><div className="flex justify-between gap-3"><p className="font-bold">{title}</p><p className="text-xs text-muted-foreground">{meta}</p></div><p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{subtitle}</p></div>;
-const DataCard = ({ title, children }: { title: string; children: React.ReactNode }) => <section className="rounded-3xl bg-card p-4 shadow-soft"><h2 className="mb-2 text-2xl font-black">{title}</h2>{children}</section>;
+const DataCard = ({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) => <section className="rounded-3xl bg-card p-4 shadow-soft"><div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 className="text-2xl font-black">{title}</h2>{action && <div className="flex gap-2">{action}</div>}</div>{children}</section>;
 const Cell = ({ label, value }: { label: string; value: string }) => <div><p className="text-xs font-bold uppercase text-muted-foreground">{label}</p><p className="break-words text-sm font-semibold">{value}</p></div>;
 const Empty = () => <div className="grid min-h-40 place-items-center rounded-3xl bg-muted text-center text-muted-foreground"><div><Star className="mx-auto mb-2 h-8 w-8 text-primary" /><p>Nenhum dado ainda.</p></div></div>;
 

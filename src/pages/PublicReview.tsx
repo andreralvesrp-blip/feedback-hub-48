@@ -44,10 +44,18 @@ const formatPhone = (value: string) => {
   return `(${area}) ${mobileDigit} ${first}-${second}`;
 };
 
+type ExperienceRating = "loved" | "ok" | "improve";
+
+const experienceLabel: Record<ExperienceRating, string> = {
+  loved: "Adorei",
+  ok: "Foi ok",
+  improve: "Pode melhorar",
+};
+
 const reactionOptions = [
-  { label: "Adorei", Icon: Heart, score: 10, className: "reaction-loved" },
-  { label: "Foi ok", Icon: ThumbsUp, score: 8, className: "reaction-ok" },
-  { label: "Pode melhorar", Icon: Sparkles, score: 6, className: "reaction-improve" },
+  { label: experienceLabel.loved, Icon: Heart, value: "loved" as const, className: "reaction-loved" },
+  { label: experienceLabel.ok, Icon: ThumbsUp, value: "ok" as const, className: "reaction-ok" },
+  { label: experienceLabel.improve, Icon: Sparkles, value: "improve" as const, className: "reaction-improve" },
 ];
 
 const PublicReview = () => {
@@ -55,22 +63,22 @@ const PublicReview = () => {
   const [company, setCompany] = useState<PublicCompany | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
-  const [step, setStep] = useState<"nps" | "private" | "contact" | "thanks" | "google" | "budget" | "contactSaved" | "done">("nps");
+  const [experienceRating, setExperienceRating] = useState<ExperienceRating | null>(null);
+  const [step, setStep] = useState<"experience" | "private" | "contact" | "thanks" | "google" | "budget" | "contactSaved" | "done">("experience");
   const [responseId, setResponseId] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [wantsGoogle, setWantsGoogle] = useState(false);
   const [contactSaved, setContactSaved] = useState(false);
-  const scoreAdvanceTimer = useRef<number | null>(null);
+  const experienceAdvanceTimer = useRef<number | null>(null);
 
-  const isHappy = score !== null && score >= 9;
-  const flowOrder = isHappy ? ["nps", "thanks", "budget", "contactSaved", "google", "done"] : ["nps", "private", "contact", "done"];
+  const isLoved = experienceRating === "loved";
+  const flowOrder = isLoved ? ["experience", "thanks", "budget", "contactSaved", "google", "done"] : ["experience", "private", "contact", "done"];
   const currentStepIndex = Math.max(0, flowOrder.indexOf(step));
   const progress = useMemo(() => {
     return Math.max(18, ((currentStepIndex + 1) / flowOrder.length) * 100);
-  }, [isHappy, step]);
+  }, [isLoved, step]);
 
   useEffect(() => {
     let active = true;
@@ -88,12 +96,12 @@ const PublicReview = () => {
     };
   }, [slug]);
 
-  const submitNps = async (options?: { redirected?: boolean; google?: boolean }) => {
-    if (score === null) return null;
+  const submitExperience = async (options?: { redirected?: boolean; google?: boolean }) => {
+    if (!experienceRating) return null;
     setSubmitting(true);
-    const { data, error } = await (supabase as any).rpc("submit_nps_response", {
+    const { data, error } = await (supabase as any).rpc("submit_experience_response", {
       _company_slug: slug,
-      _score: score,
+      _experience_rating: experienceRating,
       _comment: comment,
       _name: name.trim(),
       _whatsapp: sanitizePhone(whatsapp),
@@ -109,12 +117,12 @@ const PublicReview = () => {
     return data as string;
   };
 
-  const handleScore = (value: number) => {
-    if (scoreAdvanceTimer.current) window.clearTimeout(scoreAdvanceTimer.current);
-    setScore(value);
-    setWantsGoogle(value > 8);
-    scoreAdvanceTimer.current = window.setTimeout(() => {
-      setStep(value <= 8 ? "private" : "thanks");
+  const handleExperience = (value: ExperienceRating) => {
+    if (experienceAdvanceTimer.current) window.clearTimeout(experienceAdvanceTimer.current);
+    setExperienceRating(value);
+    setWantsGoogle(value === "loved");
+    experienceAdvanceTimer.current = window.setTimeout(() => {
+      setStep(value === "loved" ? "thanks" : "private");
     }, 180);
   };
 
@@ -124,16 +132,16 @@ const PublicReview = () => {
       toast.error(parsed.error.issues[0]?.message || "Confira seus dados.");
       return;
     }
-    const id = await submitNps();
+    const id = await submitExperience();
     if (id) setStep("done");
   };
 
   const handleGoogleContinue = async () => {
-    const npsId = responseId ?? (await submitNps({ google: true, redirected: false }));
-    if (!npsId) return;
+    const experienceId = responseId ?? (await submitExperience({ google: true, redirected: false }));
+    if (!experienceId) return;
     if (company?.google_reviews_url) {
       setSubmitting(true);
-      const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: npsId });
+      const { error } = await (supabase as any).rpc("mark_experience_google_review_intent", { _response_id: experienceId });
       setSubmitting(false);
       if (error) {
         toast.error(error.message || "Não foi possível registrar sua escolha.");
@@ -147,7 +155,7 @@ const PublicReview = () => {
   const handleFinalGoogleReview = async () => {
     if (!responseId || !company?.google_reviews_url) return;
     setSubmitting(true);
-    const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: responseId });
+    const { error } = await (supabase as any).rpc("mark_experience_google_review_intent", { _response_id: responseId });
     setSubmitting(false);
     if (error) {
       toast.error(error.message || "Não foi possível registrar sua escolha.");
@@ -162,16 +170,16 @@ const PublicReview = () => {
       toast.error(parsed.error.issues[0]?.message || "Confira seus dados.");
       return;
     }
-    const npsId = responseId ?? (await submitNps({ google: false, redirected: false }));
-    if (!npsId) return;
+    const experienceId = responseId ?? (await submitExperience({ google: false, redirected: false }));
+    if (!experienceId) return;
     setSubmitting(true);
     const { error } = await (supabase as any).rpc("submit_budget_request", {
       _company_slug: slug,
       _name: parsed.data.name,
       _whatsapp: sanitizePhone(parsed.data.whatsapp),
       _interest: "outro",
-      _nps_score: score,
-      _nps_response_id: npsId,
+      _experience_rating: experienceRating,
+      _experience_response_id: experienceId,
     });
     setSubmitting(false);
     if (error) {
@@ -232,7 +240,7 @@ const PublicReview = () => {
         </div>
 
         <section className="flex flex-1 flex-col justify-center rounded-3xl bg-card p-5 shadow-soft animate-soft-rise">
-          {step === "nps" && (
+          {step === "experience" && (
             <div className="mx-auto w-full max-w-sm space-y-8 py-4 text-center">
               <div className="space-y-3">
                 <h1 className="text-3xl font-black leading-tight">Como foi sua experiência hoje no Kids Point?</h1>
@@ -240,12 +248,12 @@ const PublicReview = () => {
               <div className="space-y-3">
                 {reactionOptions.map((option) => {
                   const Icon = option.Icon;
-                  const selected = score === option.score;
+                  const selected = experienceRating === option.value;
                   return (
                   <button
                     key={option.label}
                     type="button"
-                    onClick={() => handleScore(option.score)}
+                    onClick={() => handleExperience(option.value)}
                     className={`reaction-choice ${option.className} ${selected ? "reaction-choice-selected" : ""}`}
                   >
                     <Icon className="reaction-icon h-6 w-6" strokeWidth={2.4} fill="currentColor" aria-hidden="true" />
@@ -332,8 +340,8 @@ const PublicReview = () => {
           {step === "done" && (
             <div className="space-y-6 text-center">
               <CheckCircle2 className="mx-auto h-16 w-16 text-success" />
-              <h1 className="text-3xl font-black leading-tight">{isHappy ? "Muito obrigado pela sua avaliação!" : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
-              {!isHappy && company.google_reviews_url && (
+              <h1 className="text-3xl font-black leading-tight">{isLoved ? "Muito obrigado pela sua avaliação!" : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
+              {!isLoved && company.google_reviews_url && (
                 <div className="space-y-4 text-left">
                   <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
                     <Checkbox checked={wantsGoogle} onCheckedChange={(v) => setWantsGoogle(Boolean(v))} />
@@ -346,7 +354,7 @@ const PublicReview = () => {
                   )}
                 </div>
               )}
-              {isHappy && wantsGoogle && company.google_reviews_url && (
+              {isLoved && wantsGoogle && company.google_reviews_url && (
                 <Button asChild variant="hero" size="touch" className="w-full">
                   <a href={company.google_reviews_url} target="_blank" rel="noreferrer">Avaliar no Google</a>
                 </Button>

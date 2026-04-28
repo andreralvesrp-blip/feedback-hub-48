@@ -47,8 +47,6 @@ All colors MUST be HSL.
     --surface-strong-foreground: 42 38% 97%;
     --brand: 164 76% 28%;
     --brand-soft: 164 50% 90%;
-    --score-button: 0 0% 100%;
-    --score-button-foreground: 221 39% 11%;
     --reaction-choice: 0 0% 100%;
     --reaction-choice-foreground: 221 39% 11%;
     --reaction-choice-border: 220 13% 91%;
@@ -153,16 +151,6 @@ All colors MUST be HSL.
 
   .tap-highlight-none {
     -webkit-tap-highlight-color: transparent;
-  }
-
-  .score-scroll-fade {
-    mask-image: linear-gradient(90deg, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
-  }
-
-  .score-button {
-    background: hsl(var(--score-button));
-    color: hsl(var(--score-button-foreground));
   }
 
   .reaction-choice {

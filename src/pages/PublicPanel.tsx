@@ -6,10 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Metrics = {
   company_name: string;
-  nps: number;
+  experience_index: number;
   total_responses: number;
+  loved_count: number;
+  ok_count: number;
+  improve_count: number;
   budget_requests: number;
-  negative_feedbacks: number;
+  feedbacks: number;
   google_redirects: number;
 };
 
@@ -62,13 +65,16 @@ const PublicPanel = () => {
           <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="h-12 rounded-2xl" />
         </div>
 
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["NPS", metrics.nps],
+            ["Índice de Experiência", `${metrics.experience_index}%`],
             ["Total respostas", metrics.total_responses],
+            ["Adorei", metrics.loved_count],
+            ["Foi ok", metrics.ok_count],
+            ["Pode melhorar", metrics.improve_count],
             ["Orçamentos", metrics.budget_requests],
-            ["Feedbacks negativos", metrics.negative_feedbacks],
-            ["Direcionamentos Google", metrics.google_redirects],
+            ["Feedbacks", metrics.feedbacks],
+            ["Google", metrics.google_redirects],
           ].map(([label, value]) => (
             <div key={String(label)} className="rounded-3xl bg-card p-5 shadow-soft">
               <BarChart3 className="mb-4 h-5 w-5 text-primary" />
