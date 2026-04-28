@@ -250,7 +250,7 @@ const PublicReview = () => {
               <HeartHandshake className="h-10 w-10 text-primary" />
               <h1 className="text-2xl font-black leading-tight">Se preferir, podemos te chamar no WhatsApp para entender melhor sua experiência.</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome (opcional)" className="h-14 rounded-2xl text-base" />
-              <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="WhatsApp (opcional)" className="h-14 rounded-2xl text-base" />
+              <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="WhatsApp (opcional)" className="h-14 rounded-2xl text-base" />
               <Button variant="hero" size="touch" className="w-full" onClick={handlePrivateSubmit} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Enviar feedback
               </Button>
@@ -276,7 +276,7 @@ const PublicReview = () => {
               </label>
               <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem nossa empresa com mais confiança.</p>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Continuar
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Finalizar
               </Button>
             </div>
           )}
@@ -286,7 +286,7 @@ const PublicReview = () => {
               <p className="font-bold text-primary">Se você também estiver planejando um evento, podemos te ajudar 😊</p>
               <h1 className="text-2xl font-black leading-tight">Quer receber nosso contato?</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="h-14 rounded-2xl text-base" />
-              <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={15} placeholder="WhatsApp com DDD" className="h-14 rounded-2xl text-base" />
+              <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="WhatsApp com DDD" className="h-14 rounded-2xl text-base" />
               <Button variant="warm" size="touch" className="w-full" onClick={submitBudget} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Receber contato
               </Button>
