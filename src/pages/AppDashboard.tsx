@@ -210,16 +210,16 @@ const AppDashboard = () => {
       return;
     }
     setSavingField(field);
-    const payload = {
-      [field]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value,
-      ...(field === "name" && !company ? { slug: slugify(value) } : {}),
+    const fieldPayload = { [field]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value };
+    const createPayload = {
+      ...fieldPayload,
       owner_user_id: user.id,
-      slug: company?.slug || form.slug || slugify(form.name || value),
+      slug: form.slug || slugify(field === "name" ? value : form.name),
       name: field === "name" ? value : form.name,
     };
     const result = company
-      ? await (supabase as any).from("companies").update(payload).eq("id", company.id).select("*").single()
-      : await (supabase as any).from("companies").insert(payload).select("*").single();
+      ? await (supabase as any).from("companies").update(fieldPayload).eq("id", company.id).select("*").single()
+      : await (supabase as any).from("companies").insert(createPayload).select("*").single();
     setSavingField(null);
     if (result.error) {
       toast.error(result.error.message);
