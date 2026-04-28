@@ -324,7 +324,7 @@ const PublicReview = () => {
 
           {step === "contactSaved" && (
             <div className="space-y-5 text-center">
-              <CheckCircle2 className="mx-auto h-14 w-14 text-success" />
+              <span className="block text-5xl text-success" aria-hidden="true">✓</span>
               <h1 className="text-2xl font-black leading-tight">Perfeito! Já recebemos seu contato 😊</h1>
               <p className="text-base text-muted-foreground">Iremos te chamar pelo WhatsApp em breve</p>
               <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("google")}>
@@ -340,7 +340,7 @@ const PublicReview = () => {
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="h-14 rounded-2xl text-base" />
               <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="WhatsApp com DDD" className="h-14 rounded-2xl text-base" />
               <Button variant="warm" size="touch" className="w-full rounded-2xl shadow-none" onClick={submitBudget} disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Receber contato
+                {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-foreground/40 border-t-accent-foreground" />} Receber contato
               </Button>
               <Button variant="quiet" size="touch" className="w-full rounded-2xl shadow-none" onClick={() => setStep("google")} disabled={submitting}>
                 Não tenho interesse
@@ -350,7 +350,7 @@ const PublicReview = () => {
 
           {step === "done" && (
             <div className="space-y-6 text-center">
-              <CheckCircle2 className="mx-auto h-16 w-16 text-success" />
+              <span className="block text-6xl text-success" aria-hidden="true">✓</span>
               <h1 className="text-3xl font-black leading-tight">{isLoved ? "Muito obrigado pela sua avaliação!" : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
               {!isLoved && company.google_reviews_url && (
                 <div className="space-y-4 text-left">
@@ -360,7 +360,7 @@ const PublicReview = () => {
                   </label>
                   {wantsGoogle && (
                     <Button variant="hero" size="touch" className="w-full" onClick={handleFinalGoogleReview} disabled={submitting}>
-                      {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Continuar para o Google
+                      {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground" />} Continuar para o Google
                     </Button>
                   )}
                 </div>
