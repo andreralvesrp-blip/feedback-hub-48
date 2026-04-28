@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, CheckCircle2, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, QrCode, Settings, Star, Table2 } from "lucide-react";
+import { BarChart3, CheckCircle2, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, Pencil, QrCode, Settings, Star, Table2 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
@@ -89,8 +89,8 @@ const AppDashboard = () => {
   const [budgetStatusFilter, setBudgetStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
-  const [savingField, setSavingField] = useState<ConfigField | null>(null);
-  const [savedField, setSavedField] = useState<ConfigField | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [editableFields, setEditableFields] = useState<Record<ConfigField, boolean>>({ name: false, alert_phone: false, google_reviews_url: false, initial_review_question: false });
   const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "" });
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
@@ -155,9 +155,7 @@ const AppDashboard = () => {
       }
       const linked = (linkedCompanies ?? []) as UserCompany[];
       if (linked.length === 0) {
-        await supabase.auth.signOut();
-        toast.error("Acesso ainda não liberado. Aguarde aprovação.");
-        navigate("/login", { replace: true });
+        navigate("/onboarding", { replace: true });
         return;
       }
       setMemberships(linked);
@@ -216,32 +214,25 @@ const AppDashboard = () => {
     };
   }, [company, currentMonthStart, periodValue]);
 
-  const saveCompanyField = async (field: ConfigField) => {
+  const saveCompanySettings = async () => {
     if (!user) return;
-    const value = form[field].trim();
-    const parsed = companyFieldSchemas[field].safeParse(value);
+    if (!canManageCompany || !company) return toast.error("Você tem acesso somente leitura.");
+    const parsed = companySchema.safeParse(form);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message || "Confira os campos.");
       return;
     }
-    if (company && value === (company[field] ?? "")) {
-      setSavedField(field);
-      window.setTimeout(() => setSavedField((current) => current === field ? null : current), 1800);
-      return;
-    }
-    setSavingField(field);
-    const normalizedField = field === "google_reviews_url" ? "review_google_url" : field === "initial_review_question" ? "initial_question" : field;
-    const fieldPayload = { [normalizedField]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value };
-    const createPayload = {
-      ...fieldPayload,
-      owner_user_id: user.id,
-      slug: form.slug || slugify(field === "name" ? value : form.name),
-      name: field === "name" ? value : form.name,
-    };
-    const result = company
-      ? await (supabase as any).from("companies").update(fieldPayload).eq("id", company.id).select("*").single()
-      : await (supabase as any).from("companies").insert(createPayload).select("*").single();
-    setSavingField(null);
+
+    setSavingSettings(true);
+    const result = await (supabase as any).from("companies").update({
+      name: parsed.data.name,
+      alert_phone: parsed.data.alert_phone || null,
+      google_reviews_url: parsed.data.google_reviews_url || null,
+      review_google_url: parsed.data.google_reviews_url || null,
+      initial_review_question: parsed.data.initial_review_question,
+      initial_question: parsed.data.initial_review_question,
+    }).eq("id", company.id).select("*").single();
+    setSavingSettings(false);
     if (result.error) {
       toast.error(result.error.message);
       return;
@@ -249,10 +240,8 @@ const AppDashboard = () => {
     const nextCompany = { ...result.data, google_reviews_url: result.data.review_google_url ?? result.data.google_reviews_url, initial_review_question: result.data.initial_question ?? result.data.initial_review_question };
     setCompany(nextCompany);
     setForm((current) => ({ ...current, ...nextCompany }));
-    setSavedField(field);
-    window.setTimeout(() => setSavedField((current) => current === field ? null : current), 1800);
-    toast.success("Salvo.");
-    if (!company) await loadData(result.data.id);
+    setEditableFields({ name: false, alert_phone: false, google_reviews_url: false, initial_review_question: false });
+    toast.success("Alterações salvas com sucesso");
   };
 
   const updateBudget = async (id: string, status: string) => {
