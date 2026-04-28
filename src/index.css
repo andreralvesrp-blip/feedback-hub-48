@@ -49,12 +49,15 @@ All colors MUST be HSL.
     --brand-soft: 164 50% 90%;
     --score-button: 0 0% 100%;
     --score-button-foreground: 221 39% 11%;
-    --reaction-loved: 138 76% 97%;
-    --reaction-loved-foreground: 142 72% 24%;
-    --reaction-ok: 48 96% 89%;
-    --reaction-ok-foreground: 31 81% 31%;
-    --reaction-improve: 0 93% 94%;
-    --reaction-improve-foreground: 0 74% 35%;
+    --reaction-choice: 0 0% 100%;
+    --reaction-choice-foreground: 221 39% 11%;
+    --reaction-choice-border: 220 13% 91%;
+    --reaction-loved: 142 71% 45%;
+    --reaction-loved-soft: 142 76% 97%;
+    --reaction-ok: 38 92% 50%;
+    --reaction-ok-soft: 48 100% 97%;
+    --reaction-improve: 0 84% 60%;
+    --reaction-improve-soft: 0 100% 98%;
     --gradient-hero: linear-gradient(135deg, hsl(165 43% 18%) 0%, hsl(164 76% 28%) 52%, hsl(38 91% 56%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--secondary) / 0.72) 100%);
     --shadow-soft: 0 18px 50px -26px hsl(218 35% 12% / 0.34);
@@ -162,18 +165,45 @@ All colors MUST be HSL.
     color: hsl(var(--score-button-foreground));
   }
 
-  .reaction-loved {
-    background: hsl(var(--reaction-loved));
-    color: hsl(var(--reaction-loved-foreground));
+  .reaction-choice {
+    min-height: 64px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border-radius: 1.15rem;
+    border: 1px solid hsl(var(--reaction-choice-border));
+    background: hsl(var(--reaction-choice));
+    color: hsl(var(--reaction-choice-foreground));
+    font-size: 1.0625rem;
+    font-weight: 650;
+    box-shadow: 0 10px 30px -24px hsl(221 39% 11% / 0.28);
+    transition: transform 150ms ease, border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
   }
 
-  .reaction-ok {
-    background: hsl(var(--reaction-ok));
-    color: hsl(var(--reaction-ok-foreground));
+  .reaction-choice:active,
+  .reaction-choice-selected {
+    transform: scale(1.03);
+    box-shadow: 0 16px 38px -28px hsl(221 39% 11% / 0.36);
   }
 
-  .reaction-improve {
-    background: hsl(var(--reaction-improve));
-    color: hsl(var(--reaction-improve-foreground));
+  .reaction-loved .reaction-icon { color: hsl(var(--reaction-loved)); }
+  .reaction-ok .reaction-icon { color: hsl(var(--reaction-ok)); }
+  .reaction-improve .reaction-icon { color: hsl(var(--reaction-improve)); }
+
+  .reaction-loved.reaction-choice-selected {
+    border-color: hsl(var(--reaction-loved));
+    background: hsl(var(--reaction-loved-soft));
+  }
+
+  .reaction-ok.reaction-choice-selected {
+    border-color: hsl(var(--reaction-ok));
+    background: hsl(var(--reaction-ok-soft));
+  }
+
+  .reaction-improve.reaction-choice-selected {
+    border-color: hsl(var(--reaction-improve));
+    background: hsl(var(--reaction-improve-soft));
   }
 }
