@@ -16,6 +16,7 @@ type ExperienceRating = "loved" | "ok" | "improve";
 type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
 type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
 type Webhook = { id: string; name: string; url: string; is_active: boolean; };
+type MonthOption = { month_start: string; month_label: string };
 
 const companySchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -32,13 +33,27 @@ const interestLabel: Record<string, string> = {
 
 const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perdido"];
 const responseStatus = ["novo", "visto", "resolvido"];
-const periods = { month: "Mês fechado", thirty: "Últimos 30 dias" };
 const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 
 const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
 const formatDate = (value: string) => new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+const getCurrentMonthStart = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+};
+const formatMonthLabel = (monthStart: string) => {
+  const [year, month] = monthStart.split("-").map(Number);
+  return `${monthNames[(month || 1) - 1]}/${String(year).slice(-2)}`;
+};
+const getMonthRange = (monthStart: string) => {
+  const [year, month] = monthStart.split("-").map(Number);
+  const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
+  const end = new Date(year, month, 1, 0, 0, 0, 0);
+  return { start: start.toISOString(), end: end.toISOString() };
+};
 
 const AppDashboard = () => {
   const navigate = useNavigate();
