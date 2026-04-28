@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, CheckCircle2, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, QrCode, Settings, Star, Table2 } from "lucide-react";
+import { BarChart3, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, Pencil, QrCode, Settings, Star, Table2 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
@@ -26,13 +26,7 @@ const companySchema = z.object({
   google_reviews_url: z.string().trim().url("Informe uma URL válida.").or(z.literal("")),
   initial_review_question: z.string().trim().min(5, "Informe a pergunta inicial.").max(180),
 });
-const companyFieldSchemas = {
-  name: companySchema.shape.name,
-  alert_phone: companySchema.shape.alert_phone,
-  google_reviews_url: companySchema.shape.google_reviews_url,
-  initial_review_question: companySchema.shape.initial_review_question,
-};
-type ConfigField = keyof typeof companyFieldSchemas;
+type ConfigField = "name" | "alert_phone" | "google_reviews_url" | "initial_review_question";
 
 const interestLabel: Record<string, string> = {
   festa_infantil: "Festa infantil",
@@ -53,7 +47,6 @@ const configFieldLabels: Record<ConfigField, string> = {
   initial_review_question: "Pergunta inicial para avaliação",
 };
 
-const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
 const formatDate = (value: string) => new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -89,8 +82,8 @@ const AppDashboard = () => {
   const [budgetStatusFilter, setBudgetStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
-  const [savingField, setSavingField] = useState<ConfigField | null>(null);
-  const [savedField, setSavedField] = useState<ConfigField | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [editableFields, setEditableFields] = useState<Record<ConfigField, boolean>>({ name: false, alert_phone: false, google_reviews_url: false, initial_review_question: false });
   const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "" });
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
@@ -155,9 +148,7 @@ const AppDashboard = () => {
       }
       const linked = (linkedCompanies ?? []) as UserCompany[];
       if (linked.length === 0) {
-        await supabase.auth.signOut();
-        toast.error("Acesso ainda não liberado. Aguarde aprovação.");
-        navigate("/login", { replace: true });
+        navigate("/onboarding", { replace: true });
         return;
       }
       setMemberships(linked);
@@ -216,32 +207,25 @@ const AppDashboard = () => {
     };
   }, [company, currentMonthStart, periodValue]);
 
-  const saveCompanyField = async (field: ConfigField) => {
+  const saveCompanySettings = async () => {
     if (!user) return;
-    const value = form[field].trim();
-    const parsed = companyFieldSchemas[field].safeParse(value);
+    if (!canManageCompany || !company) return toast.error("Você tem acesso somente leitura.");
+    const parsed = companySchema.safeParse(form);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message || "Confira os campos.");
       return;
     }
-    if (company && value === (company[field] ?? "")) {
-      setSavedField(field);
-      window.setTimeout(() => setSavedField((current) => current === field ? null : current), 1800);
-      return;
-    }
-    setSavingField(field);
-    const normalizedField = field === "google_reviews_url" ? "review_google_url" : field === "initial_review_question" ? "initial_question" : field;
-    const fieldPayload = { [normalizedField]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value };
-    const createPayload = {
-      ...fieldPayload,
-      owner_user_id: user.id,
-      slug: form.slug || slugify(field === "name" ? value : form.name),
-      name: field === "name" ? value : form.name,
-    };
-    const result = company
-      ? await (supabase as any).from("companies").update(fieldPayload).eq("id", company.id).select("*").single()
-      : await (supabase as any).from("companies").insert(createPayload).select("*").single();
-    setSavingField(null);
+
+    setSavingSettings(true);
+    const result = await (supabase as any).from("companies").update({
+      name: parsed.data.name,
+      alert_phone: parsed.data.alert_phone || null,
+      google_reviews_url: parsed.data.google_reviews_url || null,
+      review_google_url: parsed.data.google_reviews_url || null,
+      initial_review_question: parsed.data.initial_review_question,
+      initial_question: parsed.data.initial_review_question,
+    }).eq("id", company.id).select("*").single();
+    setSavingSettings(false);
     if (result.error) {
       toast.error(result.error.message);
       return;
@@ -249,10 +233,8 @@ const AppDashboard = () => {
     const nextCompany = { ...result.data, google_reviews_url: result.data.review_google_url ?? result.data.google_reviews_url, initial_review_question: result.data.initial_question ?? result.data.initial_review_question };
     setCompany(nextCompany);
     setForm((current) => ({ ...current, ...nextCompany }));
-    setSavedField(field);
-    window.setTimeout(() => setSavedField((current) => current === field ? null : current), 1800);
-    toast.success("Salvo.");
-    if (!company) await loadData(result.data.id);
+    setEditableFields({ name: false, alert_phone: false, google_reviews_url: false, initial_review_question: false });
+    toast.success("Alterações salvas com sucesso");
   };
 
   const updateBudget = async (id: string, status: string) => {
@@ -372,7 +354,18 @@ const AppDashboard = () => {
           </TabsContent>
 
           <TabsContent value="settings">
-            <section className="mx-auto max-w-2xl rounded-lg bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-bold">Configurações</h2><div className="grid gap-4"><InlineConfigField field="name" value={form.name} onChange={(value) => setForm((f) => ({ ...f, name: value }))} onSave={saveCompanyField} saving={savingField === "name"} saved={savedField === "name"} disabled={!canManageCompany} /><InlineConfigField field="alert_phone" value={form.alert_phone} onChange={(value) => setForm((f) => ({ ...f, alert_phone: value }))} onSave={saveCompanyField} saving={savingField === "alert_phone"} saved={savedField === "alert_phone"} inputMode="tel" disabled={!canManageCompany} /><InlineConfigField field="google_reviews_url" value={form.google_reviews_url} onChange={(value) => setForm((f) => ({ ...f, google_reviews_url: value }))} onSave={saveCompanyField} saving={savingField === "google_reviews_url"} saved={savedField === "google_reviews_url"} inputMode="url" disabled={!canManageCompany} /><InlineConfigField field="initial_review_question" value={form.initial_review_question} onChange={(value) => setForm((f) => ({ ...f, initial_review_question: value }))} onSave={saveCompanyField} saving={savingField === "initial_review_question"} saved={savedField === "initial_review_question"} multiline disabled={!canManageCompany} /></div></section>
+            <section className="mx-auto max-w-2xl rounded-lg bg-card p-5 shadow-soft">
+              <h2 className="mb-5 text-2xl font-bold">Configurações</h2>
+              <div className="grid gap-4">
+                <EditableConfigField field="name" value={form.name} onChange={(value) => setForm((f) => ({ ...f, name: value }))} editable={editableFields.name} onEdit={() => setEditableFields((f) => ({ ...f, name: true }))} disabled={!canManageCompany} />
+                <EditableConfigField field="alert_phone" value={form.alert_phone} onChange={(value) => setForm((f) => ({ ...f, alert_phone: value }))} editable={editableFields.alert_phone} onEdit={() => setEditableFields((f) => ({ ...f, alert_phone: true }))} inputMode="tel" disabled={!canManageCompany} />
+                <EditableConfigField field="google_reviews_url" value={form.google_reviews_url} onChange={(value) => setForm((f) => ({ ...f, google_reviews_url: value }))} editable={editableFields.google_reviews_url} onEdit={() => setEditableFields((f) => ({ ...f, google_reviews_url: true }))} inputMode="url" disabled={!canManageCompany} />
+                <EditableConfigField field="initial_review_question" value={form.initial_review_question} onChange={(value) => setForm((f) => ({ ...f, initial_review_question: value }))} editable={editableFields.initial_review_question} onEdit={() => setEditableFields((f) => ({ ...f, initial_review_question: true }))} multiline disabled={!canManageCompany} />
+                <Button variant="hero" size="touch" onClick={saveCompanySettings} disabled={savingSettings || !canManageCompany}>
+                  {savingSettings && <Loader2 className="h-4 w-4 animate-spin" />} Salvar alterações
+                </Button>
+              </div>
+            </section>
           </TabsContent>
         </Tabs>
       </div>
@@ -383,9 +376,9 @@ const AppDashboard = () => {
 const PanelList = ({ title, empty, children }: { title: string; empty: string; children: React.ReactNode }) => <section className="rounded-lg bg-card p-5 shadow-soft"><h2 className="mb-3 text-xl font-bold">{title}</h2><div className="space-y-3">{children || <p className="text-muted-foreground">{empty}</p>}</div></section>;
 const Row = ({ title, subtitle, meta }: { title: string; subtitle: string; meta: string }) => <div className="rounded-lg bg-muted p-3"><div className="flex justify-between gap-3"><p className="font-bold">{title}</p><p className="text-xs text-muted-foreground">{meta}</p></div><p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{subtitle}</p></div>;
 const DataCard = ({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) => <section className="rounded-lg bg-card p-4 shadow-soft"><div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 className="text-2xl font-bold">{title}</h2>{action && <div className="flex gap-2">{action}</div>}</div>{children}</section>;
-type InlineConfigFieldProps = { field: ConfigField; value: string; onChange: (value: string) => void; onSave: (field: ConfigField) => void; saving: boolean; saved: boolean; multiline?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]; disabled?: boolean };
-const InlineConfigField = forwardRef<HTMLDivElement, InlineConfigFieldProps>(({ field, value, onChange, onSave, saving, saved, multiline, inputMode, disabled }, ref) => <div ref={ref} className="space-y-2"><div className="flex items-center justify-between gap-3"><label className="text-sm font-bold">{configFieldLabels[field]}</label><span className="min-w-14 text-right text-xs font-bold text-muted-foreground">{saving ? <Loader2 className="ml-auto h-4 w-4 animate-spin text-primary" /> : saved ? <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="h-4 w-4" /> salvo</span> : null}</span></div><div className="flex gap-2">{multiline ? <Textarea value={value} onChange={(e) => onChange(e.target.value)} maxLength={180} className="min-h-24 rounded-lg text-base" disabled={disabled} /> : <Input value={value} onChange={(e) => onChange(e.target.value)} inputMode={inputMode} className="h-12 rounded-lg" disabled={disabled} />}<Button type="button" variant="hero" className="h-12 shrink-0 self-start" onClick={() => onSave(field)} disabled={saving || disabled}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}</Button></div></div>);
-InlineConfigField.displayName = "InlineConfigField";
+type EditableConfigFieldProps = { field: ConfigField; value: string; onChange: (value: string) => void; editable: boolean; onEdit: () => void; multiline?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]; disabled?: boolean };
+const EditableConfigField = forwardRef<HTMLDivElement, EditableConfigFieldProps>(({ field, value, onChange, editable, onEdit, multiline, inputMode, disabled }, ref) => <div ref={ref} className="space-y-2"><div className="flex items-center justify-between gap-3"><label className="text-sm font-bold">{configFieldLabels[field]}</label><Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={onEdit} disabled={disabled || editable} aria-label={`Editar ${configFieldLabels[field]}`}><Pencil className="h-4 w-4" /></Button></div>{multiline ? <Textarea value={value} onChange={(e) => onChange(e.target.value)} maxLength={180} className="min-h-24 rounded-lg text-base" disabled={disabled || !editable} /> : <Input value={value} onChange={(e) => onChange(e.target.value)} inputMode={inputMode} className="h-12 rounded-lg" disabled={disabled || !editable} />}</div>);
+EditableConfigField.displayName = "EditableConfigField";
 const Cell = ({ label, value }: { label: string; value: string }) => <div><p className="text-xs font-bold uppercase text-muted-foreground">{label}</p><p className="break-words text-sm font-semibold">{value}</p></div>;
 const Empty = () => <div className="grid min-h-40 place-items-center rounded-lg bg-muted text-center text-muted-foreground"><div><Star className="mx-auto mb-2 h-8 w-8 text-primary" /><p>Nenhum dado ainda.</p></div></div>;
 
