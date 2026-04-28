@@ -184,13 +184,22 @@ const AppDashboard = () => {
 
   const saveCompany = async () => {
     if (!user) return;
-    const parsed = companySchema.safeParse({ name: form.name, slug: form.slug || slugify(form.name) });
+    const parsed = companySchema.safeParse({ name: form.name, alert_phone: form.alert_phone, google_reviews_url: form.google_reviews_url, initial_review_question: form.initial_review_question });
     if (!parsed.success) {
-      toast.error("Informe nome e slug válido, usando letras, números e hífens.");
+      toast.error(parsed.error.issues[0]?.message || "Confira os campos.");
       return;
     }
     setSaving(true);
-    const payload = { ...form, ...parsed.data, owner_user_id: user.id, logo_url: form.logo_url || null, whatsapp: form.whatsapp || null, google_reviews_url: form.google_reviews_url || null, alert_phone: form.alert_phone || null };
+    const payload = {
+      ...form,
+      ...parsed.data,
+      slug: form.slug || slugify(parsed.data.name),
+      owner_user_id: user.id,
+      logo_url: form.logo_url || null,
+      whatsapp: form.whatsapp || null,
+      google_reviews_url: parsed.data.google_reviews_url || null,
+      alert_phone: parsed.data.alert_phone || null,
+    };
     const result = company
       ? await (supabase as any).from("companies").update(payload).eq("id", company.id).select("*").single()
       : await (supabase as any).from("companies").insert(payload).select("*").single();
@@ -207,20 +216,6 @@ const AppDashboard = () => {
   const updateBudget = async (id: string, status: string) => {
     await (supabase as any).from("budget_requests").update({ status }).eq("id", id);
     setBudgets((items) => items.map((i) => i.id === id ? { ...i, status } : i));
-  };
-
-  const addWebhook = async () => {
-    if (!company || !webhookUrl.startsWith("https://")) {
-      toast.error("Use uma URL https válida.");
-      return;
-    }
-    const { data, error } = await (supabase as any).from("webhooks").insert({ company_id: company.id, url: webhookUrl }).select("*").single();
-    if (error) toast.error(error.message);
-    else {
-      setWebhooks((items) => [data, ...items]);
-      setWebhookUrl("");
-      toast.success("Webhook adicionado.");
-    }
   };
 
   const copy = async (value: string) => {
