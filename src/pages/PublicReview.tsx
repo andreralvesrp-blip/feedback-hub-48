@@ -283,28 +283,27 @@ const PublicReview = () => {
           )}
 
           {step === "google" && (
-            <div className="space-y-5">
+            <div className="space-y-5 text-center">
               <ExternalLink className="h-10 w-10 text-primary" />
-              {contactSaved && (
-                <p className="rounded-2xl bg-muted p-4 text-sm font-bold text-foreground">
-                  Seu contato foi salvo com sucesso!
-                </p>
-              )}
-              <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar na nossa página do Google?</h1>
+              <h1 className="text-2xl font-black leading-tight">Quer compartilhar sua experiência no Google também?</h1>
               <p className="text-sm font-bold text-muted-foreground">Leva menos de 1 minuto.</p>
-              <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem nossa empresa com mais confiança.</p>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="flex items-center gap-3 rounded-2xl bg-muted p-4 text-sm font-bold">
-                  <Checkbox checked={wantsGoogle} onCheckedChange={() => setWantsGoogle(true)} />
-                  <span>Sim</span>
-                </label>
-                <label className="flex items-center gap-3 rounded-2xl bg-muted p-4 text-sm font-bold">
-                  <Checkbox checked={!wantsGoogle} onCheckedChange={() => setWantsGoogle(false)} />
-                  <span>Não</span>
-                </label>
-              </div>
+              <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem com mais confiança.</p>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Finalizar
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Avaliar no Google
+              </Button>
+              <Button variant="quiet" size="touch" className="w-full" onClick={() => setStep("done")} disabled={submitting}>
+                Agora não
+              </Button>
+            </div>
+          )}
+
+          {step === "contactSaved" && (
+            <div className="space-y-5 text-center">
+              <CheckCircle2 className="mx-auto h-14 w-14 text-success" />
+              <h1 className="text-2xl font-black leading-tight">Perfeito! Já recebemos seu contato 😊</h1>
+              <p className="text-base text-muted-foreground">Nossa equipe pode te chamar pelo WhatsApp em breve.</p>
+              <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("google")}>
+                Continuar
               </Button>
             </div>
           )}
