@@ -44,13 +44,6 @@ const formatPhone = (value: string) => {
   return `(${area}) ${mobileDigit} ${first}-${second}`;
 };
 
-const getScoreClass = (value: number) => {
-  if (value <= 3) return "score-low";
-  if (value <= 6) return "score-mid";
-  if (value <= 8) return "score-good";
-  return "score-great";
-};
-
 const PublicReview = () => {
   const { slug = "" } = useParams();
   const [company, setCompany] = useState<PublicCompany | null>(null);
@@ -246,7 +239,7 @@ const PublicReview = () => {
                     key={i}
                     type="button"
                     onClick={() => handleScore(i)}
-                    className={`flex h-14 w-14 shrink-0 snap-center items-center justify-center rounded-[1.35rem] border border-border/70 text-xl font-semibold shadow-soft transition-all duration-150 hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${score === i ? "scale-105 border-primary bg-primary text-primary-foreground shadow-glow" : getScoreClass(i)}`}
+                    className={`score-button flex h-14 w-14 shrink-0 snap-center items-center justify-center rounded-[1.35rem] border border-border text-xl font-semibold shadow-soft transition-all duration-150 hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${score === i ? "scale-105 border-primary bg-primary text-primary-foreground shadow-glow" : ""}`}
                   >
                     {i}
                   </button>
