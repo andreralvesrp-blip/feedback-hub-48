@@ -43,7 +43,7 @@ const Index = () => {
                 QR Code para eventos e empresas locais
               </div>
               <div className="space-y-5">
-                <h1 className="max-w-3xl text-4xl font-bold leading-[1.02] tracking-normal sm:text-6xl">
+                <h1 className="max-w-3xl text-4xl font-bold leading-[1.08] tracking-normal sm:text-6xl">
                   Transforme convidados em avaliações no Google e novos clientes.
                 </h1>
                 <p className="max-w-xl text-lg leading-8 text-muted-foreground">
