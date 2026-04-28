@@ -49,6 +49,12 @@ All colors MUST be HSL.
     --brand-soft: 164 50% 90%;
     --score-button: 0 0% 100%;
     --score-button-foreground: 221 39% 11%;
+    --reaction-loved: 138 76% 97%;
+    --reaction-loved-foreground: 142 72% 24%;
+    --reaction-ok: 48 96% 89%;
+    --reaction-ok-foreground: 31 81% 31%;
+    --reaction-improve: 0 93% 94%;
+    --reaction-improve-foreground: 0 74% 35%;
     --gradient-hero: linear-gradient(135deg, hsl(165 43% 18%) 0%, hsl(164 76% 28%) 52%, hsl(38 91% 56%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--secondary) / 0.72) 100%);
     --shadow-soft: 0 18px 50px -26px hsl(218 35% 12% / 0.34);
@@ -154,5 +160,20 @@ All colors MUST be HSL.
   .score-button {
     background: hsl(var(--score-button));
     color: hsl(var(--score-button-foreground));
+  }
+
+  .reaction-loved {
+    background: hsl(var(--reaction-loved));
+    color: hsl(var(--reaction-loved-foreground));
+  }
+
+  .reaction-ok {
+    background: hsl(var(--reaction-ok));
+    color: hsl(var(--reaction-ok-foreground));
+  }
+
+  .reaction-improve {
+    background: hsl(var(--reaction-improve));
+    color: hsl(var(--reaction-improve-foreground));
   }
 }
