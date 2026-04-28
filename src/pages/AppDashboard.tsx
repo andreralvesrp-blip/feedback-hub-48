@@ -16,6 +16,7 @@ type ExperienceRating = "loved" | "ok" | "improve";
 type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
 type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
 type Webhook = { id: string; name: string; url: string; is_active: boolean; };
+type MonthOption = { month_start: string; month_label: string };
 
 const companySchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -32,13 +33,27 @@ const interestLabel: Record<string, string> = {
 
 const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perdido"];
 const responseStatus = ["novo", "visto", "resolvido"];
-const periods = { month: "Mês fechado", thirty: "Últimos 30 dias" };
 const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 
 const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
 const formatDate = (value: string) => new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+const getCurrentMonthStart = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+};
+const formatMonthLabel = (monthStart: string) => {
+  const [year, month] = monthStart.split("-").map(Number);
+  return `${monthNames[(month || 1) - 1]}/${String(year).slice(-2)}`;
+};
+const getMonthRange = (monthStart: string) => {
+  const [year, month] = monthStart.split("-").map(Number);
+  const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
+  const end = new Date(year, month, 1, 0, 0, 0, 0);
+  return { start: start.toISOString(), end: end.toISOString() };
+};
 
 const AppDashboard = () => {
   const navigate = useNavigate();
@@ -48,9 +63,11 @@ const AppDashboard = () => {
   const [responses, setResponses] = useState<ExperienceResponse[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
-  const [period, setPeriod] = useState<"month" | "thirty">("thirty");
+  const [monthOptions, setMonthOptions] = useState<MonthOption[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthStart());
   const [experienceFilter, setExperienceFilter] = useState<"all" | ExperienceRating>("all");
   const [loading, setLoading] = useState(true);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter" });
   const [webhookUrl, setWebhookUrl] = useState("");
@@ -58,20 +75,11 @@ const AppDashboard = () => {
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
   const panelUrl = company ? `${window.location.origin}/painel/${company.slug}?token=${company.public_panel_token}` : "";
 
-  const filtered = useMemo(() => {
-    const now = new Date();
-    const start = period === "thirty" ? new Date(now.getTime() - 30 * 86400000) : new Date(now.getFullYear(), now.getMonth(), 1);
-    return {
-      responses: responses.filter((r) => new Date(r.created_at) >= start),
-      budgets: budgets.filter((b) => new Date(b.created_at) >= start),
-    };
-  }, [responses, budgets, period]);
-
   const stats = useMemo(() => {
-    const total = filtered.responses.length;
-    const loved = filtered.responses.filter((r) => r.experience_rating === "loved").length;
-    const ok = filtered.responses.filter((r) => r.experience_rating === "ok").length;
-    const improve = filtered.responses.filter((r) => r.experience_rating === "improve").length;
+    const total = responses.length;
+    const loved = responses.filter((r) => r.experience_rating === "loved").length;
+    const ok = responses.filter((r) => r.experience_rating === "ok").length;
+    const improve = responses.filter((r) => r.experience_rating === "improve").length;
     const experienceIndex = total ? Math.round(((loved - improve) / total) * 100) : 0;
     return {
       experienceIndex,
@@ -79,20 +87,23 @@ const AppDashboard = () => {
       loved,
       ok,
       improve,
-      budgets: filtered.budgets.length,
-      google: filtered.responses.filter((r) => r.wants_google_review || r.redirected_to_google).length,
+      budgets: budgets.length,
+      google: responses.filter((r) => r.wants_google_review || r.redirected_to_google).length,
     };
-  }, [filtered]);
+  }, [responses, budgets]);
 
-  const loadData = async (companyId: string) => {
+  const loadData = async (companyId: string, monthStart = selectedMonth, showLoading = true) => {
+    if (showLoading) setDashboardLoading(true);
+    const { start, end } = getMonthRange(monthStart);
     const [res, bud, hooks] = await Promise.all([
-      (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
-      (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
+      (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).gte("created_at", start).lt("created_at", end).order("created_at", { ascending: false }).limit(1000),
+      (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).gte("created_at", start).lt("created_at", end).order("created_at", { ascending: false }).limit(1000),
       (supabase as any).from("webhooks").select("*").eq("company_id", companyId).order("created_at", { ascending: false }),
     ]);
     setResponses(res.data ?? []);
     setBudgets(bud.data ?? []);
     setWebhooks(hooks.data ?? []);
+    if (showLoading) setDashboardLoading(false);
   };
 
   useEffect(() => {
@@ -119,7 +130,16 @@ const AppDashboard = () => {
         alert_phone: first?.alert_phone ?? "",
         plan: first?.plan ?? "starter",
       });
-      if (first) await loadData(first.id);
+      if (first) {
+        const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: first.id });
+        const availableMonths = months ?? [];
+        const currentMonth = getCurrentMonthStart();
+        const hasCurrentMonth = availableMonths.some((item: MonthOption) => item.month_start === currentMonth);
+        const normalizedMonths = hasCurrentMonth ? availableMonths : [{ month_start: currentMonth, month_label: formatMonthLabel(currentMonth) }, ...availableMonths];
+        setMonthOptions(normalizedMonths);
+        setSelectedMonth(currentMonth);
+        await loadData(first.id, currentMonth, false);
+      }
       setLoading(false);
     };
     init();
@@ -206,6 +226,11 @@ const AppDashboard = () => {
     navigate("/login", { replace: true });
   };
 
+  const handleMonthChange = async (monthStart: string) => {
+    setSelectedMonth(monthStart);
+    if (company) await loadData(company.id, monthStart);
+  };
+
   if (loading) return <main className="grid min-h-screen place-items-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></main>;
 
   return (
@@ -231,8 +256,8 @@ const AppDashboard = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-5">
-            <div className="flex justify-end"><Select value={period} onValueChange={(v) => setPeriod(v as "month" | "thirty")}><SelectTrigger className="w-48 rounded-2xl"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(periods).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
+            <div className="flex items-center justify-end gap-3"><span className="text-sm font-semibold text-muted-foreground">Período</span><Select value={selectedMonth} onValueChange={handleMonthChange} disabled={!company || dashboardLoading}><SelectTrigger className="w-36 rounded-2xl"><SelectValue placeholder={formatMonthLabel(selectedMonth)} /></SelectTrigger><SelectContent>{monthOptions.map((month) => <SelectItem key={month.month_start} value={month.month_start}>{month.month_label}</SelectItem>)}</SelectContent></Select>{dashboardLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}</div>
+            <div className={`grid gap-3 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-7 ${dashboardLoading ? "opacity-60" : "opacity-100"}`}>
               {[["Índice de Experiência", stats.experienceIndex], ["Respostas", stats.total], ["Adorei", stats.loved], ["Foi ok", stats.ok], ["Não gostei", stats.improve], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
                 <div key={label} className="rounded-3xl bg-card p-4 shadow-soft"><p className="text-sm text-muted-foreground">{label}</p><p className="text-3xl font-black">{value}</p></div>
               ))}
