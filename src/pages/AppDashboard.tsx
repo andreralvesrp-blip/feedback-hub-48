@@ -130,7 +130,16 @@ const AppDashboard = () => {
         alert_phone: first?.alert_phone ?? "",
         plan: first?.plan ?? "starter",
       });
-      if (first) await loadData(first.id);
+      if (first) {
+        const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: first.id });
+        const availableMonths = months ?? [];
+        const currentMonth = getCurrentMonthStart();
+        const hasCurrentMonth = availableMonths.some((item: MonthOption) => item.month_start === currentMonth);
+        const normalizedMonths = hasCurrentMonth ? availableMonths : [{ month_start: currentMonth, month_label: formatMonthLabel(currentMonth) }, ...availableMonths];
+        setMonthOptions(normalizedMonths);
+        setSelectedMonth(currentMonth);
+        await loadData(first.id, currentMonth, false);
+      }
       setLoading(false);
     };
     init();
