@@ -21,7 +21,12 @@ type PublicCompany = {
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Informe seu nome").max(120),
-  whatsapp: z.string().trim().regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, "Informe um WhatsApp válido com DDD"),
+  whatsapp: z.string().trim().regex(/^\(\d{2}\) \d \d{4}-\d{4}$/, "Informe um WhatsApp válido com DDD"),
+});
+
+const privateContactSchema = z.object({
+  name: z.string().trim().max(120),
+  whatsapp: z.string().trim().refine((value) => !value || /^\(\d{2}\) \d \d{4}-\d{4}$/.test(value), "Informe um WhatsApp válido com DDD"),
 });
 
 const sanitizePhone = (value: string) => value.replace(/\D/g, "");
@@ -29,12 +34,14 @@ const sanitizePhone = (value: string) => value.replace(/\D/g, "");
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
   const area = digits.slice(0, 2);
-  const first = digits.length > 10 ? digits.slice(2, 7) : digits.slice(2, 6);
-  const second = digits.length > 10 ? digits.slice(7, 11) : digits.slice(6, 10);
+  const mobileDigit = digits.slice(2, 3);
+  const first = digits.slice(3, 7);
+  const second = digits.slice(7, 11);
 
   if (digits.length <= 2) return area ? `(${area}` : "";
-  if (!second) return `(${area}) ${first}`;
-  return `(${area}) ${first}-${second}`;
+  if (digits.length <= 3) return `(${area}) ${mobileDigit}`;
+  if (!second) return `(${area}) ${mobileDigit} ${first}`;
+  return `(${area}) ${mobileDigit} ${first}-${second}`;
 };
 
 const PublicReview = () => {
@@ -52,7 +59,7 @@ const PublicReview = () => {
 
   const isHappy = score !== null && score >= 9;
   const progress = useMemo(() => {
-    const order = isHappy ? ["nps", "thanks", "google", "budget", "done"] : ["nps", "private", "contact", "done"];
+    const order = isHappy ? ["nps", "thanks", "budget", "google", "done"] : ["nps", "private", "contact", "done"];
     return Math.max(18, ((order.indexOf(step) + 1) / order.length) * 100);
   }, [isHappy, step]);
 
@@ -79,8 +86,8 @@ const PublicReview = () => {
       _company_slug: slug,
       _score: score,
       _comment: comment,
-      _name: name,
-      _whatsapp: whatsapp,
+      _name: name.trim(),
+      _whatsapp: sanitizePhone(whatsapp),
       _wants_google_review: options?.google ?? wantsGoogle,
       _redirected_to_google: options?.redirected ?? false,
     });
