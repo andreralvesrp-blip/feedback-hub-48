@@ -80,6 +80,7 @@ export type Database = {
           created_at: string
           google_reviews_url: string | null
           id: string
+          initial_question: string | null
           initial_review_question: string
           is_active: boolean
           login_email: string | null
@@ -89,6 +90,7 @@ export type Database = {
           plan: Database["public"]["Enums"]["company_plan"]
           public_panel_token: string
           responsible_name: string | null
+          review_google_url: string | null
           segment: string | null
           slug: string
           updated_at: string
@@ -99,6 +101,7 @@ export type Database = {
           created_at?: string
           google_reviews_url?: string | null
           id?: string
+          initial_question?: string | null
           initial_review_question?: string
           is_active?: boolean
           login_email?: string | null
@@ -108,6 +111,7 @@ export type Database = {
           plan?: Database["public"]["Enums"]["company_plan"]
           public_panel_token?: string
           responsible_name?: string | null
+          review_google_url?: string | null
           segment?: string | null
           slug: string
           updated_at?: string
@@ -118,6 +122,7 @@ export type Database = {
           created_at?: string
           google_reviews_url?: string | null
           id?: string
+          initial_question?: string | null
           initial_review_question?: string
           is_active?: boolean
           login_email?: string | null
@@ -127,6 +132,7 @@ export type Database = {
           plan?: Database["public"]["Enums"]["company_plan"]
           public_panel_token?: string
           responsible_name?: string | null
+          review_google_url?: string | null
           segment?: string | null
           slug?: string
           updated_at?: string
@@ -211,6 +217,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_companies: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["company_user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["company_user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["company_user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_companies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhooks: {
         Row: {
           company_id: string
@@ -254,6 +295,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_company: {
+        Args: {
+          _alert_phone?: string
+          _google_url?: string
+          _initial_question?: string
+          _name: string
+          _slug: string
+        }
+        Returns: string
+      }
+      admin_link_user_to_company: {
+        Args: {
+          _company_id: string
+          _role: Database["public"]["Enums"]["company_user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      can_manage_company: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      get_admin_companies: {
+        Args: never
+        Returns: {
+          alert_phone: string
+          created_at: string
+          google_reviews_url: string
+          id: string
+          initial_review_question: string
+          name: string
+          slug: string
+        }[]
+      }
       get_company_response_months: {
         Args: { _company_id: string }
         Returns: {
@@ -264,6 +339,7 @@ export type Database = {
       get_public_company: {
         Args: { _slug: string }
         Returns: {
+          alert_phone: string
           google_reviews_url: string
           id: string
           initial_review_question: string
@@ -288,6 +364,15 @@ export type Database = {
           total_responses: number
         }[]
       }
+      has_company_role: {
+        Args: {
+          _company_id: string
+          _roles?: Database["public"]["Enums"]["company_user_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       mark_experience_google_review_intent: {
         Args: { _response_id: string }
         Returns: boolean
@@ -324,6 +409,7 @@ export type Database = {
         | "fechado"
         | "perdido"
       company_plan: "starter" | "pro" | "premium"
+      company_user_role: "super_admin" | "company_admin" | "viewer"
       experience_rating: "loved" | "ok" | "improve"
       interest_type:
         | "festa_infantil"
@@ -467,6 +553,7 @@ export const Constants = {
         "perdido",
       ],
       company_plan: ["starter", "pro", "premium"],
+      company_user_role: ["super_admin", "company_admin", "viewer"],
       experience_rating: ["loved", "ok", "improve"],
       interest_type: [
         "festa_infantil",
