@@ -81,6 +81,18 @@ const PublicReview = () => {
     return Math.max(18, ((currentStepIndex + 1) / flowOrder.length) * 100);
   }, [isLoved, step]);
 
+  const resetFlow = () => {
+    if (experienceAdvanceTimer.current) window.clearTimeout(experienceAdvanceTimer.current);
+    setExperienceRating(null);
+    setStep("experience");
+    setResponseId(null);
+    setComment("");
+    setName("");
+    setWhatsapp("");
+    setWantsGoogle(false);
+    setContactSaved(false);
+  };
+
   useEffect(() => {
     let active = true;
     const loadCompany = async () => {
@@ -360,6 +372,9 @@ const PublicReview = () => {
                   <a href={company.google_reviews_url} target="_blank" rel="noreferrer">Avaliar no Google</a>
                 </Button>
               )}
+              <Button variant="quiet" size="touch" className="w-full" onClick={resetFlow}>
+                Enviar nova resposta
+              </Button>
             </div>
           )}
         </section>
