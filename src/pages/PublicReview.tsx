@@ -44,6 +44,12 @@ const formatPhone = (value: string) => {
   return `(${area}) ${mobileDigit} ${first}-${second}`;
 };
 
+const reactionOptions = [
+  { label: "Adorei", icon: "🟢", score: 10, className: "reaction-loved" },
+  { label: "Foi ok", icon: "🟡", score: 8, className: "reaction-ok" },
+  { label: "Pode melhorar", icon: "🔴", score: 6, className: "reaction-improve" },
+];
+
 const PublicReview = () => {
   const { slug = "" } = useParams();
   const [company, setCompany] = useState<PublicCompany | null>(null);
@@ -227,28 +233,22 @@ const PublicReview = () => {
 
         <section className="flex flex-1 flex-col justify-center rounded-3xl bg-card p-5 shadow-soft animate-soft-rise">
           {step === "nps" && (
-            <div className="mx-auto w-full max-w-sm space-y-7 py-4 text-center">
+            <div className="mx-auto w-full max-w-sm space-y-8 py-4 text-center">
               <div className="space-y-3">
-                <h1 className="text-3xl font-black leading-tight">O quanto você recomendaria a experiência de hoje?</h1>
-                <p className="text-base font-semibold text-muted-foreground">Leva só alguns segundos.</p>
+                <h1 className="text-3xl font-black leading-tight">Como foi a experiência de hoje?</h1>
               </div>
-              <div className="score-scroll-fade -mx-5 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <div className="flex w-max snap-x snap-mandatory gap-3">
-                {Array.from({ length: 11 }, (_, i) => (
+              <div className="space-y-3">
+                {reactionOptions.map((option) => (
                   <button
-                    key={i}
+                    key={option.label}
                     type="button"
-                    onClick={() => handleScore(i)}
-                    className={`score-button flex h-14 w-14 shrink-0 snap-center items-center justify-center rounded-[1.35rem] border border-border text-xl font-semibold shadow-soft transition-all duration-150 hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${score === i ? "scale-105 border-primary bg-primary text-primary-foreground shadow-glow" : ""}`}
+                    onClick={() => handleScore(option.score)}
+                    className={`flex min-h-16 w-full items-center justify-center gap-3 rounded-[1.35rem] px-5 text-lg font-bold shadow-soft transition-all duration-150 hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${score === option.score ? "scale-105 bg-primary text-primary-foreground shadow-glow" : option.className}`}
                   >
-                    {i}
+                    <span className="text-xl" aria-hidden="true">{option.icon}</span>
+                    <span>{option.label}</span>
                   </button>
                 ))}
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
-                <span>Pouco provável</span>
-                <span>Muito provável</span>
               </div>
             </div>
           )}
