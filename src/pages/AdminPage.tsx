@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Loader2, LogOut, Plus, Shield, UserPlus } from "lucide-react";
+import { Building2, ClipboardList, Loader2, LogOut, Plus, Shield, UserPlus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ type AdminCompany = {
 };
 
 type CompanyRole = "super_admin" | "company_admin" | "viewer";
+type AccessRequest = { id: string; full_name: string; company_name: string; document: string; whatsapp: string; email: string; status: "pending" | "approved" | "rejected"; created_at: string };
 
 const companySchema = z.object({
   name: z.string().trim().min(2, "Informe o nome da empresa.").max(120),
@@ -43,6 +44,7 @@ const AdminPage = () => {
   const [savingCompany, setSavingCompany] = useState(false);
   const [linkingUser, setLinkingUser] = useState(false);
   const [companies, setCompanies] = useState<AdminCompany[]>([]);
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [companyForm, setCompanyForm] = useState({ name: "", slug: "", alert_phone: "", googleUrl: "", initialQuestion: "Como foi sua experiência hoje?" });
   const [newUserForm, setNewUserForm] = useState({ email: "", password: "", companyId: "", role: "viewer" as CompanyRole });
   const [linkForm, setLinkForm] = useState<{ userId: string; companyId: string; role: CompanyRole }>({ userId: "", companyId: "", role: "viewer" });
@@ -50,13 +52,17 @@ const AdminPage = () => {
   const selectedCompany = useMemo(() => companies.find((company) => company.id === linkForm.companyId), [companies, linkForm.companyId]);
 
   const loadCompanies = async () => {
-    const { data, error } = await (supabase as any).rpc("get_admin_companies");
-    if (error) {
+    const [{ data, error }, requests] = await Promise.all([
+      (supabase as any).rpc("get_admin_companies"),
+      (supabase as any).rpc("get_access_requests"),
+    ]);
+    if (error || requests.error) {
       toast.error(error.message || "Acesso negado.");
       navigate("/app", { replace: true });
       return;
     }
     setCompanies(data ?? []);
+    setAccessRequests(requests.data ?? []);
     if (!linkForm.companyId && data?.[0]) setLinkForm((current) => ({ ...current, companyId: data[0].id }));
     if (!newUserForm.companyId && data?.[0]) setNewUserForm((current) => ({ ...current, companyId: data[0].id }));
   };
@@ -201,6 +207,28 @@ const AdminPage = () => {
               <SelectContent><SelectItem value="viewer">Viewer</SelectItem><SelectItem value="company_admin">Company admin</SelectItem><SelectItem value="super_admin">Super admin</SelectItem></SelectContent>
             </Select>
             <Button variant="hero" size="touch" onClick={linkUser} disabled={linkingUser || !selectedCompany}>{linkingUser && <Loader2 className="h-4 w-4 animate-spin" />} Vincular</Button>
+          </div>
+        </section>
+
+        <section className="rounded-lg bg-card p-5 shadow-soft lg:col-span-2">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-lg bg-primary text-primary-foreground"><ClipboardList className="h-5 w-5" /></div>
+            <h2 className="text-2xl font-bold">Solicitações de acesso</h2>
+          </div>
+          <div className="grid gap-3">
+            {accessRequests.length === 0 ? <p className="rounded-lg bg-muted p-4 text-muted-foreground">Nenhuma solicitação recebida.</p> : accessRequests.map((request) => (
+              <div key={request.id} className="grid gap-3 rounded-lg bg-muted p-4 lg:grid-cols-[1fr_1fr_auto] lg:items-center">
+                <div>
+                  <p className="font-bold">{request.full_name}</p>
+                  <p className="text-sm text-muted-foreground">{request.company_name} · {request.document}</p>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p>{request.email}</p>
+                  <p>{request.whatsapp}</p>
+                </div>
+                <span className="rounded-full bg-secondary px-3 py-1 text-xs font-bold text-secondary-foreground">{request.status}</span>
+              </div>
+            ))}
           </div>
         </section>
 
