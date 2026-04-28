@@ -17,6 +17,7 @@ type ExperienceResponse = { id: string; created_at: string; experience_rating: E
 type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
 type Webhook = { id: string; name: string; url: string; is_active: boolean; };
 type MonthOption = { month_start: string; month_label: string };
+type PeriodValue = "current" | string;
 
 const companySchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -54,6 +55,8 @@ const getMonthRange = (monthStart: string) => {
   const end = new Date(year, month, 1, 0, 0, 0, 0);
   return { start: start.toISOString(), end: end.toISOString() };
 };
+const getPeriodMonthStart = (period: PeriodValue) => period === "current" ? getCurrentMonthStart() : period;
+const getCurrentPeriodLabel = () => `Mês atual (${formatMonthLabel(getCurrentMonthStart())})`;
 
 const AppDashboard = () => {
   const navigate = useNavigate();
@@ -64,7 +67,7 @@ const AppDashboard = () => {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [monthOptions, setMonthOptions] = useState<MonthOption[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthStart());
+  const [periodValue, setPeriodValue] = useState<PeriodValue>("current");
   const [experienceFilter, setExperienceFilter] = useState<"all" | ExperienceRating>("all");
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
