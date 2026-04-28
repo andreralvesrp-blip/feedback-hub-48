@@ -56,6 +56,7 @@ const PublicReview = () => {
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [wantsGoogle, setWantsGoogle] = useState(false);
+  const [contactSaved, setContactSaved] = useState(false);
 
   const isHappy = score !== null && score >= 9;
   const flowOrder = isHappy ? ["nps", "thanks", "budget", "google", "done"] : ["nps", "private", "contact", "done"];
@@ -133,6 +134,7 @@ const PublicReview = () => {
         toast.error(error.message || "Não foi possível registrar sua escolha.");
         return;
       }
+      if (contactSaved) toast.success("Seu contato foi salvo. A equipe poderá te chamar pelo WhatsApp em breve.");
       window.open(company.google_reviews_url, "_blank", "noopener,noreferrer");
     }
     setStep("done");
@@ -172,6 +174,7 @@ const PublicReview = () => {
       toast.error(error.message || "Não foi possível enviar o pedido.");
       return;
     }
+    setContactSaved(true);
     setStep("google");
   };
 
@@ -284,6 +287,11 @@ const PublicReview = () => {
             <div className="space-y-5">
               <ExternalLink className="h-10 w-10 text-primary" />
               <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar na nossa página do Google?</h1>
+              {contactSaved && (
+                <p className="rounded-2xl bg-muted p-4 text-sm font-bold text-foreground">
+                  Seu contato foi salvo. A equipe poderá te chamar pelo WhatsApp em breve.
+                </p>
+              )}
               <p className="text-sm font-bold text-muted-foreground">Leva menos de 1 minuto.</p>
               <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem nossa empresa com mais confiança.</p>
               <div className="grid grid-cols-2 gap-3">
