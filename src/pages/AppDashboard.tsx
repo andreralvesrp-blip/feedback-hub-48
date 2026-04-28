@@ -95,7 +95,7 @@ const AppDashboard = () => {
     };
   }, [responses, budgets]);
 
-  const loadData = async (companyId: string, monthStart = selectedMonth, showLoading = true) => {
+  const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
     const { start, end } = getMonthRange(monthStart);
     const [res, bud, hooks] = await Promise.all([
@@ -137,10 +137,8 @@ const AppDashboard = () => {
         const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: first.id });
         const availableMonths = months ?? [];
         const currentMonth = getCurrentMonthStart();
-        const hasCurrentMonth = availableMonths.some((item: MonthOption) => item.month_start === currentMonth);
-        const normalizedMonths = hasCurrentMonth ? availableMonths : [{ month_start: currentMonth, month_label: formatMonthLabel(currentMonth) }, ...availableMonths];
-        setMonthOptions(normalizedMonths);
-        setSelectedMonth(currentMonth);
+        setMonthOptions(availableMonths);
+        setPeriodValue("current");
         await loadData(first.id, currentMonth, false);
       }
       setLoading(false);
@@ -229,9 +227,9 @@ const AppDashboard = () => {
     navigate("/login", { replace: true });
   };
 
-  const handleMonthChange = async (monthStart: string) => {
-    setSelectedMonth(monthStart);
-    if (company) await loadData(company.id, monthStart);
+  const handlePeriodChange = async (value: PeriodValue) => {
+    setPeriodValue(value);
+    if (company) await loadData(company.id, getPeriodMonthStart(value));
   };
 
   if (loading) return <main className="grid min-h-screen place-items-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></main>;
