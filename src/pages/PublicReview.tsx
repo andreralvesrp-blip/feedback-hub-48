@@ -5,7 +5,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,20 +19,10 @@ type PublicCompany = {
   google_reviews_url: string | null;
 };
 
-type Interest = "festa_infantil" | "casamento" | "evento_corporativo" | "servico_para_evento" | "outro";
-
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Informe seu nome").max(120),
   whatsapp: z.string().trim().regex(/^[0-9+()\-\s]{8,32}$/, "Informe um WhatsApp válido"),
 });
-
-const interestLabels: Record<Interest, string> = {
-  festa_infantil: "Festa infantil",
-  casamento: "Casamento",
-  evento_corporativo: "Evento corporativo",
-  servico_para_evento: "Serviço para evento",
-  outro: "Outro",
-};
 
 const sanitizePhone = (value: string) => value.replace(/[^0-9+]/g, "");
 
@@ -49,9 +38,8 @@ const PublicReview = () => {
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [wantsGoogle, setWantsGoogle] = useState(false);
-  const [interest, setInterest] = useState<Interest>("festa_infantil");
 
-  const isHappy = score !== null && score >= 8;
+  const isHappy = score !== null && score >= 9;
   const progress = useMemo(() => {
     const order = isHappy ? ["nps", "thanks", "google", "budget", "done"] : ["nps", "private", "contact", "done"];
     return Math.max(18, ((order.indexOf(step) + 1) / order.length) * 100);
@@ -96,7 +84,7 @@ const PublicReview = () => {
 
   const handleScore = (value: number) => {
     setScore(value);
-    if (value <= 7) {
+    if (value <= 8) {
       setWantsGoogle(false);
       setStep("private");
     } else {
@@ -130,7 +118,7 @@ const PublicReview = () => {
       _company_slug: slug,
       _name: parsed.data.name,
       _whatsapp: sanitizePhone(parsed.data.whatsapp),
-      _interest: interest,
+      _interest: "outro",
       _nps_score: score,
       _nps_response_id: responseId,
     });
@@ -182,24 +170,27 @@ const PublicReview = () => {
           <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
         </div>
 
-        <section className="flex flex-1 flex-col justify-center rounded-[2rem] bg-card p-5 shadow-soft animate-soft-rise">
+        <section className="flex flex-1 flex-col justify-center rounded-3xl bg-card p-5 shadow-soft animate-soft-rise">
           {step === "nps" && (
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <h1 className="text-3xl font-black leading-tight">De 0 a 10, qual a probabilidade de você nos contratar ou indicar?</h1>
-                <p className="text-muted-foreground">Toque em uma nota. Leva só alguns segundos.</p>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <h1 className="text-2xl font-black leading-tight">De 0 a 10, o quanto você recomendaria o {company.name} para um familiar ou amigo?</h1>
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-6 gap-2">
                 {Array.from({ length: 11 }, (_, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => handleScore(i)}
-                    className="aspect-square rounded-2xl border border-border bg-surface text-xl font-black shadow-soft transition hover:-translate-y-0.5 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-12 rounded-xl border border-border bg-surface text-lg font-black shadow-soft transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {i}
                   </button>
                 ))}
+              </div>
+              <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
+                <span>Pouco provável</span>
+                <span>Muito provável</span>
               </div>
             </div>
           )}
@@ -207,9 +198,9 @@ const PublicReview = () => {
           {step === "private" && (
             <div className="space-y-5">
               <MessageSquareText className="h-10 w-10 text-primary" />
-              <h1 className="text-3xl font-black leading-tight">Obrigado pela sinceridade. O que faltou para entregarmos uma experiência melhor?</h1>
-              <Textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1200} rows={5} placeholder="Escreva sua sugestão" className="min-h-36 rounded-2xl text-base" />
-              <p className="text-sm text-muted-foreground">Sua resposta será enviada diretamente para a empresa como sugestão de melhoria.</p>
+              <h1 className="text-2xl font-black leading-tight">Obrigado pela sinceridade. O que mais te incomodou e/ou poderia ter sido melhor?</h1>
+              <Textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1200} rows={5} placeholder="Queremos te ouvir. Escreva aqui sua sugestão." className="min-h-32 rounded-2xl text-base" />
+              <p className="text-sm text-muted-foreground">Fique tranquilo(a). Essa resposta será enviada de forma privada para o dono da empresa como sugestão de melhoria.</p>
               <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("contact")}>Continuar</Button>
             </div>
           )}
@@ -217,12 +208,12 @@ const PublicReview = () => {
           {step === "contact" && (
             <div className="space-y-5">
               <HeartHandshake className="h-10 w-10 text-primary" />
-              <h1 className="text-3xl font-black leading-tight">Você toparia deixar seu nome e WhatsApp para entendermos melhor o que aconteceu?</h1>
+              <h1 className="text-2xl font-black leading-tight">Se preferir, podemos te chamar no WhatsApp para entender melhor sua experiência.</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome (opcional)" className="h-14 rounded-2xl text-base" />
               <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="WhatsApp (opcional)" className="h-14 rounded-2xl text-base" />
               <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
                 <Checkbox checked={wantsGoogle} onCheckedChange={(v) => setWantsGoogle(Boolean(v))} />
-                <span>Também quero avaliar publicamente no Google</span>
+                <span>Deixar minha avaliação no Google</span>
               </label>
               <Button variant="hero" size="touch" className="w-full" onClick={handlePrivateSubmit} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Enviar feedback
@@ -233,7 +224,7 @@ const PublicReview = () => {
           {step === "thanks" && (
             <div className="space-y-6 text-center">
               <PartyPopper className="mx-auto h-14 w-14 text-accent" />
-              <h1 className="text-3xl font-black leading-tight">Que bom saber disso. Obrigado pela sua avaliação!</h1>
+              <h1 className="text-2xl font-black leading-tight">Ficamos muito felizes que você tenha gostado! 😊</h1>
               <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("google")}>Continuar</Button>
             </div>
           )}
@@ -241,12 +232,12 @@ const PublicReview = () => {
           {step === "google" && (
             <div className="space-y-5">
               <ExternalLink className="h-10 w-10 text-primary" />
-              <h1 className="text-3xl font-black leading-tight">Quer publicar sua avaliação no Google também?</h1>
+              <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar na nossa página do Google?</h1>
               <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
                 <Checkbox checked={wantsGoogle} onCheckedChange={(v) => setWantsGoogle(Boolean(v))} />
-                <span>Você será redirecionado e leva alguns segundos.</span>
+                <span>Leva menos de 1 minuto.</span>
               </label>
-              <p className="text-sm text-muted-foreground">Sua avaliação pública ajuda outras pessoas a conhecerem a empresa.</p>
+              <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem nossa empresa com mais confiança.</p>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Continuar
               </Button>
@@ -255,17 +246,12 @@ const PublicReview = () => {
 
           {step === "budget" && (
             <div className="space-y-5">
-              <h1 className="text-3xl font-black leading-tight">Gostaria de receber um orçamento ou falar com a empresa?</h1>
+              <p className="font-bold text-primary">Se você também estiver planejando um evento, podemos te ajudar 😊</p>
+              <h1 className="text-2xl font-black leading-tight">Quer receber nosso contato?</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="h-14 rounded-2xl text-base" />
               <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="WhatsApp" className="h-14 rounded-2xl text-base" />
-              <Select value={interest} onValueChange={(v) => setInterest(v as Interest)}>
-                <SelectTrigger className="h-14 rounded-2xl text-base"><SelectValue placeholder="Tipo de interesse" /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(interestLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
-                </SelectContent>
-              </Select>
               <Button variant="warm" size="touch" className="w-full" onClick={submitBudget} disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Quero receber orçamento
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Receber contato
               </Button>
             </div>
           )}
