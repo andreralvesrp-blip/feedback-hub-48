@@ -92,15 +92,18 @@ const AppDashboard = () => {
     };
   }, [responses, budgets]);
 
-  const loadData = async (companyId: string) => {
+  const loadData = async (companyId: string, monthStart = selectedMonth, showLoading = true) => {
+    if (showLoading) setDashboardLoading(true);
+    const { start, end } = getMonthRange(monthStart);
     const [res, bud, hooks] = await Promise.all([
-      (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
-      (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).order("created_at", { ascending: false }).limit(200),
+      (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).gte("created_at", start).lt("created_at", end).order("created_at", { ascending: false }).limit(1000),
+      (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).gte("created_at", start).lt("created_at", end).order("created_at", { ascending: false }).limit(1000),
       (supabase as any).from("webhooks").select("*").eq("company_id", companyId).order("created_at", { ascending: false }),
     ]);
     setResponses(res.data ?? []);
     setBudgets(bud.data ?? []);
     setWebhooks(hooks.data ?? []);
+    if (showLoading) setDashboardLoading(false);
   };
 
   useEffect(() => {
