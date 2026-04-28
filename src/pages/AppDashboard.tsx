@@ -17,6 +17,7 @@ type ExperienceResponse = { id: string; created_at: string; experience_rating: E
 type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
 type Webhook = { id: string; name: string; url: string; is_active: boolean; };
 type MonthOption = { month_start: string; month_label: string };
+type PeriodValue = "current" | string;
 
 const companySchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -54,6 +55,8 @@ const getMonthRange = (monthStart: string) => {
   const end = new Date(year, month, 1, 0, 0, 0, 0);
   return { start: start.toISOString(), end: end.toISOString() };
 };
+const getPeriodMonthStart = (period: PeriodValue) => period === "current" ? getCurrentMonthStart() : period;
+const getCurrentPeriodLabel = () => `Mês atual (${formatMonthLabel(getCurrentMonthStart())})`;
 
 const AppDashboard = () => {
   const navigate = useNavigate();
@@ -64,7 +67,7 @@ const AppDashboard = () => {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [monthOptions, setMonthOptions] = useState<MonthOption[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthStart());
+  const [periodValue, setPeriodValue] = useState<PeriodValue>("current");
   const [experienceFilter, setExperienceFilter] = useState<"all" | ExperienceRating>("all");
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
@@ -92,7 +95,7 @@ const AppDashboard = () => {
     };
   }, [responses, budgets]);
 
-  const loadData = async (companyId: string, monthStart = selectedMonth, showLoading = true) => {
+  const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
     const { start, end } = getMonthRange(monthStart);
     const [res, bud, hooks] = await Promise.all([
@@ -134,10 +137,8 @@ const AppDashboard = () => {
         const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: first.id });
         const availableMonths = months ?? [];
         const currentMonth = getCurrentMonthStart();
-        const hasCurrentMonth = availableMonths.some((item: MonthOption) => item.month_start === currentMonth);
-        const normalizedMonths = hasCurrentMonth ? availableMonths : [{ month_start: currentMonth, month_label: formatMonthLabel(currentMonth) }, ...availableMonths];
-        setMonthOptions(normalizedMonths);
-        setSelectedMonth(currentMonth);
+        setMonthOptions(availableMonths);
+        setPeriodValue("current");
         await loadData(first.id, currentMonth, false);
       }
       setLoading(false);
@@ -226,9 +227,9 @@ const AppDashboard = () => {
     navigate("/login", { replace: true });
   };
 
-  const handleMonthChange = async (monthStart: string) => {
-    setSelectedMonth(monthStart);
-    if (company) await loadData(company.id, monthStart);
+  const handlePeriodChange = async (value: PeriodValue) => {
+    setPeriodValue(value);
+    if (company) await loadData(company.id, getPeriodMonthStart(value));
   };
 
   if (loading) return <main className="grid min-h-screen place-items-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></main>;
@@ -256,7 +257,7 @@ const AppDashboard = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-5">
-            <div className="flex items-center justify-end gap-3"><span className="text-sm font-semibold text-muted-foreground">Período</span><Select value={selectedMonth} onValueChange={handleMonthChange} disabled={!company || dashboardLoading}><SelectTrigger className="w-36 rounded-2xl"><SelectValue placeholder={formatMonthLabel(selectedMonth)} /></SelectTrigger><SelectContent>{monthOptions.map((month) => <SelectItem key={month.month_start} value={month.month_start}>{month.month_label}</SelectItem>)}</SelectContent></Select>{dashboardLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}</div>
+            <div className="flex items-center justify-end gap-3"><span className="text-sm font-semibold text-muted-foreground">Período</span><Select value={periodValue} onValueChange={handlePeriodChange} disabled={!company || dashboardLoading}><SelectTrigger className="w-52 rounded-2xl"><SelectValue placeholder={periodValue === "current" ? getCurrentPeriodLabel() : formatMonthLabel(periodValue)} /></SelectTrigger><SelectContent><SelectItem value="current">{getCurrentPeriodLabel()}</SelectItem>{monthOptions.length > 0 && <div className="px-3 py-2 text-xs font-bold uppercase text-muted-foreground">Selecionar mês</div>}{monthOptions.map((month) => <SelectItem key={month.month_start} value={month.month_start}>{month.month_label}</SelectItem>)}</SelectContent></Select>{dashboardLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}</div>
             <div className={`grid gap-3 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-7 ${dashboardLoading ? "opacity-60" : "opacity-100"}`}>
               {[["Índice de Experiência", stats.experienceIndex], ["Respostas", stats.total], ["Adorei", stats.loved], ["Foi ok", stats.ok], ["Não gostei", stats.improve], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
                 <div key={label} className="rounded-3xl bg-card p-4 shadow-soft"><p className="text-sm text-muted-foreground">{label}</p><p className="text-3xl font-black">{value}</p></div>
