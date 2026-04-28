@@ -96,7 +96,6 @@ const AppDashboard = () => {
   }, [responses, budgets]);
 
   const selectedManualMonth = periodValue === "current" ? undefined : periodValue;
-  const activeMonthStart = periodValue === "current" ? currentMonthStart : periodValue;
 
   const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
@@ -257,8 +256,10 @@ const AppDashboard = () => {
   };
 
   const handleCurrentMonthClick = async () => {
+    const nextCurrentMonth = getCurrentMonthStart();
+    setCurrentMonthStart(nextCurrentMonth);
     setPeriodValue("current");
-    if (company) await loadData(company.id, currentMonthStart);
+    if (company) await loadData(company.id, nextCurrentMonth);
   };
 
   const handleManualMonthChange = async (value: string) => {
