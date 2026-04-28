@@ -284,11 +284,18 @@ const PublicReview = () => {
             <div className="space-y-5">
               <ExternalLink className="h-10 w-10 text-primary" />
               <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar na nossa página do Google?</h1>
-              <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
-                <Checkbox checked={wantsGoogle} onCheckedChange={(v) => setWantsGoogle(Boolean(v))} />
-                <span>Leva menos de 1 minuto.</span>
-              </label>
+              <p className="text-sm font-bold text-muted-foreground">Leva menos de 1 minuto.</p>
               <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem nossa empresa com mais confiança.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-3 rounded-2xl bg-muted p-4 text-sm font-bold">
+                  <Checkbox checked={wantsGoogle} onCheckedChange={() => setWantsGoogle(true)} />
+                  <span>Sim</span>
+                </label>
+                <label className="flex items-center gap-3 rounded-2xl bg-muted p-4 text-sm font-bold">
+                  <Checkbox checked={!wantsGoogle} onCheckedChange={() => setWantsGoogle(false)} />
+                  <span>Não</span>
+                </label>
+              </div>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Finalizar
               </Button>
@@ -301,10 +308,10 @@ const PublicReview = () => {
               <h1 className="text-2xl font-black leading-tight">Quer receber nosso contato?</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="h-14 rounded-2xl text-base" />
               <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="WhatsApp com DDD" className="h-14 rounded-2xl text-base" />
-              <Button variant="warm" size="touch" className="w-full" onClick={submitBudget} disabled={submitting}>
+              <Button variant="warm" size="touch" className="w-full rounded-2xl shadow-none" onClick={submitBudget} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Receber contato
               </Button>
-              <Button variant="quiet" size="touch" className="w-full" onClick={() => setStep("google")} disabled={submitting}>
+              <Button variant="quiet" size="touch" className="w-full rounded-2xl shadow-none" onClick={() => setStep("google")} disabled={submitting}>
                 Não tenho interesse
               </Button>
             </div>
@@ -313,7 +320,7 @@ const PublicReview = () => {
           {step === "done" && (
             <div className="space-y-6 text-center">
               <CheckCircle2 className="mx-auto h-16 w-16 text-success" />
-              <h1 className="text-3xl font-black leading-tight">{isHappy ? "Pronto! A empresa recebeu seu pedido e poderá entrar em contato pelo WhatsApp." : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
+              <h1 className="text-3xl font-black leading-tight">{isHappy ? "Muito obrigado pela sua avaliação!" : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
               {!isHappy && company.google_reviews_url && (
                 <div className="space-y-4 text-left">
                   <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
