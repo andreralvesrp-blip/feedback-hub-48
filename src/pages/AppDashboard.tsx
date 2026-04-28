@@ -188,6 +188,19 @@ const AppDashboard = () => {
     URL.revokeObjectURL(url);
   };
 
+  const downloadResponsesCsv = () => {
+    const rows = responses.map((r) => [formatDate(r.created_at), experienceLabels[r.experience_rating], r.comment || "", r.name || "", r.whatsapp || "", "QR", r.wants_google_review || r.redirected_to_google ? "sim" : "não"]);
+    const csv = [["Data", "Experiência", "Comentário", "Nome", "WhatsApp", "Origem", "Google"], ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `experiencias-${company?.slug || "empresa"}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate("/login", { replace: true });
