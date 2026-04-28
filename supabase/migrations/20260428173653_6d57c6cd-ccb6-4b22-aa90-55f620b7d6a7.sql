@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_budget_webhooks() FROM PUBLIC, anon, authenticated;
