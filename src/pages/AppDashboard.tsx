@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, CheckCircle2, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, Pencil, QrCode, Settings, Star, Table2 } from "lucide-react";
+import { BarChart3, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, Pencil, QrCode, Settings, Star, Table2 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
@@ -26,13 +26,7 @@ const companySchema = z.object({
   google_reviews_url: z.string().trim().url("Informe uma URL válida.").or(z.literal("")),
   initial_review_question: z.string().trim().min(5, "Informe a pergunta inicial.").max(180),
 });
-const companyFieldSchemas = {
-  name: companySchema.shape.name,
-  alert_phone: companySchema.shape.alert_phone,
-  google_reviews_url: companySchema.shape.google_reviews_url,
-  initial_review_question: companySchema.shape.initial_review_question,
-};
-type ConfigField = keyof typeof companyFieldSchemas;
+type ConfigField = "name" | "alert_phone" | "google_reviews_url" | "initial_review_question";
 
 const interestLabel: Record<string, string> = {
   festa_infantil: "Festa infantil",
@@ -53,7 +47,6 @@ const configFieldLabels: Record<ConfigField, string> = {
   initial_review_question: "Pergunta inicial para avaliação",
 };
 
-const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
 const formatDate = (value: string) => new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
