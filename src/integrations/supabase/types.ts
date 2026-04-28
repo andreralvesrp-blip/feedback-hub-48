@@ -422,6 +422,9 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_valid_br_mobile: { Args: { _phone: string }; Returns: boolean }
+      is_valid_cnpj: { Args: { _cnpj: string }; Returns: boolean }
+      is_valid_cpf: { Args: { _cpf: string }; Returns: boolean }
       mark_experience_google_review_intent: {
         Args: { _response_id: string }
         Returns: boolean
