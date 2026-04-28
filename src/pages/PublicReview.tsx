@@ -58,9 +58,10 @@ const PublicReview = () => {
   const [wantsGoogle, setWantsGoogle] = useState(false);
 
   const isHappy = score !== null && score >= 9;
+  const flowOrder = isHappy ? ["nps", "thanks", "budget", "google", "done"] : ["nps", "private", "contact", "done"];
+  const currentStepIndex = Math.max(0, flowOrder.indexOf(step));
   const progress = useMemo(() => {
-    const order = isHappy ? ["nps", "thanks", "budget", "google", "done"] : ["nps", "private", "contact", "done"];
-    return Math.max(18, ((order.indexOf(step) + 1) / order.length) * 100);
+    return Math.max(18, ((currentStepIndex + 1) / flowOrder.length) * 100);
   }, [isHappy, step]);
 
   useEffect(() => {
@@ -122,9 +123,11 @@ const PublicReview = () => {
   };
 
   const handleGoogleContinue = async () => {
+    const npsId = responseId ?? (await submitNps({ google: wantsGoogle, redirected: false }));
+    if (!npsId) return;
     if (wantsGoogle && company?.google_reviews_url) {
       setSubmitting(true);
-      const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: responseId });
+      const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: npsId });
       setSubmitting(false);
       if (error) {
         toast.error(error.message || "Não foi possível registrar sua escolha.");
@@ -208,8 +211,17 @@ const PublicReview = () => {
           </div>
         </header>
 
-        <div className="mb-5 h-2 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
+        <div className="mb-5 space-y-2">
+          <div className="flex items-center justify-between px-1 text-xs font-black text-muted-foreground">
+            {flowOrder.slice(0, -1).map((item, index) => (
+              <span key={item} className={index <= currentStepIndex ? "text-primary" : undefined}>
+                {index + 1}
+              </span>
+            ))}
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
+          </div>
         </div>
 
         <section className="flex flex-1 flex-col justify-center rounded-3xl bg-card p-5 shadow-soft animate-soft-rise">
@@ -272,11 +284,18 @@ const PublicReview = () => {
             <div className="space-y-5">
               <ExternalLink className="h-10 w-10 text-primary" />
               <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar na nossa página do Google?</h1>
-              <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
-                <Checkbox checked={wantsGoogle} onCheckedChange={(v) => setWantsGoogle(Boolean(v))} />
-                <span>Leva menos de 1 minuto.</span>
-              </label>
+              <p className="text-sm font-bold text-muted-foreground">Leva menos de 1 minuto.</p>
               <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem nossa empresa com mais confiança.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-3 rounded-2xl bg-muted p-4 text-sm font-bold">
+                  <Checkbox checked={wantsGoogle} onCheckedChange={() => setWantsGoogle(true)} />
+                  <span>Sim</span>
+                </label>
+                <label className="flex items-center gap-3 rounded-2xl bg-muted p-4 text-sm font-bold">
+                  <Checkbox checked={!wantsGoogle} onCheckedChange={() => setWantsGoogle(false)} />
+                  <span>Não</span>
+                </label>
+              </div>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Finalizar
               </Button>
@@ -289,10 +308,10 @@ const PublicReview = () => {
               <h1 className="text-2xl font-black leading-tight">Quer receber nosso contato?</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="h-14 rounded-2xl text-base" />
               <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="WhatsApp com DDD" className="h-14 rounded-2xl text-base" />
-              <Button variant="warm" size="touch" className="w-full" onClick={submitBudget} disabled={submitting}>
+              <Button variant="warm" size="touch" className="w-full rounded-2xl shadow-none" onClick={submitBudget} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Receber contato
               </Button>
-              <Button variant="quiet" size="touch" className="w-full" onClick={() => setStep("google")} disabled={submitting}>
+              <Button variant="quiet" size="touch" className="w-full rounded-2xl shadow-none" onClick={() => setStep("google")} disabled={submitting}>
                 Não tenho interesse
               </Button>
             </div>
@@ -301,7 +320,7 @@ const PublicReview = () => {
           {step === "done" && (
             <div className="space-y-6 text-center">
               <CheckCircle2 className="mx-auto h-16 w-16 text-success" />
-              <h1 className="text-3xl font-black leading-tight">{isHappy ? "Pronto! A empresa recebeu seu pedido e poderá entrar em contato pelo WhatsApp." : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
+              <h1 className="text-3xl font-black leading-tight">{isHappy ? "Muito obrigado pela sua avaliação!" : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
               {!isHappy && company.google_reviews_url && (
                 <div className="space-y-4 text-left">
                   <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
