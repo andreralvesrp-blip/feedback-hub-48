@@ -251,6 +251,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_company_response_months: {
+        Args: { _company_id: string }
+        Returns: {
+          month_label: string
+          month_start: string
+        }[]
+      }
       get_public_company: {
         Args: { _slug: string }
         Returns: {
