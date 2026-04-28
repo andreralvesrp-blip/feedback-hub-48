@@ -72,7 +72,7 @@ const AppDashboard = () => {
     const loved = filtered.responses.filter((r) => r.experience_rating === "loved").length;
     const ok = filtered.responses.filter((r) => r.experience_rating === "ok").length;
     const improve = filtered.responses.filter((r) => r.experience_rating === "improve").length;
-    const experienceIndex = total ? Number(((loved / total) - (improve / total)).toFixed(2)) : 0;
+    const experienceIndex = total ? Math.round(((loved - improve) / total) * 100) : 0;
     return {
       experienceIndex,
       total,
