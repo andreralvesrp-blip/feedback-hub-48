@@ -112,17 +112,27 @@ const PublicReview = () => {
   };
 
   const handlePrivateSubmit = async () => {
+    const parsed = privateContactSchema.safeParse({ name, whatsapp });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message || "Confira seus dados.");
+      return;
+    }
     const id = await submitNps();
     if (id) setStep("done");
   };
 
   const handleGoogleContinue = async () => {
-    const id = await submitNps({ google: wantsGoogle, redirected: wantsGoogle });
-    if (!id) return;
     if (wantsGoogle && company?.google_reviews_url) {
+      setSubmitting(true);
+      const { error } = await (supabase as any).rpc("mark_nps_google_review_intent", { _response_id: responseId });
+      setSubmitting(false);
+      if (error) {
+        toast.error(error.message || "Não foi possível registrar sua escolha.");
+        return;
+      }
       window.open(company.google_reviews_url, "_blank", "noopener,noreferrer");
     }
-    setStep("budget");
+    setStep("done");
   };
 
   const handleFinalGoogleReview = async () => {
@@ -157,7 +167,7 @@ const PublicReview = () => {
       toast.error(error.message || "Não foi possível enviar o pedido.");
       return;
     }
-    setStep("done");
+    setStep("google");
   };
 
   if (loading) {
