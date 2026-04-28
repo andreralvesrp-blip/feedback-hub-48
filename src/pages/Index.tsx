@@ -28,7 +28,7 @@ const Index = () => {
               </div>
               <div>
                 <p className="text-sm font-semibold leading-tight">Captura Eventos</p>
-                <p className="text-xs text-surface-strong-foreground/70">Experiência, Google e orçamentos</p>
+                <p className="text-xs text-muted-foreground">Experiência, Google e orçamentos</p>
               </div>
             </div>
             <Button asChild variant="quiet" size="sm">
