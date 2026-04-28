@@ -19,8 +19,7 @@ const Index = () => {
 
   return (
     <main className="min-h-screen bg-background">
-      <section className="relative overflow-hidden bg-gradient-hero text-surface-strong-foreground">
-        <div className="absolute inset-x-6 top-8 h-1 rounded-full bg-accent/70 animate-scan-line motion-reduce:animate-none" />
+      <section className="relative overflow-hidden bg-gradient-hero text-foreground">
         <div className="mx-auto flex min-h-[92vh] max-w-6xl flex-col px-5 py-6 sm:px-8 lg:px-10">
           <header className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -32,22 +31,22 @@ const Index = () => {
                 <p className="text-xs text-surface-strong-foreground/70">Experiência, Google e orçamentos</p>
               </div>
             </div>
-            <Button asChild variant="quiet" size="sm" className="bg-background/15 text-surface-strong-foreground hover:bg-background/20">
+            <Button asChild variant="quiet" size="sm">
               <Link to="/login">Entrar</Link>
             </Button>
           </header>
 
           <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.04fr_0.96fr]">
             <div className="animate-soft-rise space-y-7">
-              <div className="inline-flex items-center gap-2 rounded-full bg-background/14 px-4 py-2 text-sm font-medium text-surface-strong-foreground/90 backdrop-blur">
-                <Sparkles className="h-4 w-4 text-accent" />
+              <div className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-medium text-primary">
+                <Sparkles className="h-4 w-4" />
                 QR Code para eventos e empresas locais
               </div>
               <div className="space-y-5">
                 <h1 className="max-w-3xl text-4xl font-bold leading-[1.02] tracking-normal sm:text-6xl">
                   Transforme convidados em avaliações no Google e novos clientes.
                 </h1>
-                <p className="max-w-xl text-lg leading-8 text-surface-strong-foreground/78">
+                <p className="max-w-xl text-lg leading-8 text-muted-foreground">
                   Capture feedback em segundos via QR Code no evento e gere mais avaliações e pedidos de orçamento automaticamente.
                 </p>
               </div>
@@ -57,13 +56,13 @@ const Index = () => {
                     Começar agora <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
-                <Button asChild variant="quiet" size="touch" className="bg-background/12 text-surface-strong-foreground hover:bg-background/18">
+                <Button asChild variant="quiet" size="touch">
                   <a href="#como-funciona">Ver como funciona</a>
                 </Button>
               </div>
             </div>
 
-            <div className="animate-soft-rise rounded-lg border border-background/20 bg-background/12 p-4 shadow-glow backdrop-blur-xl [animation-delay:120ms]">
+            <div className="animate-soft-rise rounded-lg border border-border bg-card p-4 shadow-soft [animation-delay:120ms]">
               <div className="rounded-lg bg-card p-4 text-card-foreground shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
@@ -150,7 +149,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="bg-gradient-hero px-5 py-16 text-surface-strong-foreground sm:px-8 lg:px-10">
+      <section className="bg-surface px-5 py-16 text-foreground sm:px-8 lg:px-10">
         <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
           <h2 className="max-w-2xl text-3xl font-bold leading-tight tracking-normal sm:text-4xl">
             Comece a capturar valor dos seus eventos hoje
