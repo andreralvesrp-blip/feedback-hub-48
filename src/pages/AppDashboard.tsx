@@ -88,7 +88,7 @@ const AppDashboard = () => {
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [savingField, setSavingField] = useState<ConfigField | null>(null);
   const [savedField, setSavedField] = useState<ConfigField | null>(null);
-  const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "Como foi sua experiência hoje?" });
+  const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "" });
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
   const panelUrl = company ? `${window.location.origin}/painel/${company.slug}?token=${company.public_panel_token}` : "";
@@ -155,7 +155,7 @@ const AppDashboard = () => {
         login_email: first?.login_email ?? currentUser.email ?? "",
         alert_phone: first?.alert_phone ?? "",
         plan: first?.plan ?? "starter",
-        initial_review_question: first?.initial_review_question ?? "Como foi sua experiência hoje?",
+        initial_review_question: first?.initial_review_question ?? "",
       });
       if (first) {
         const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: first.id });
@@ -204,18 +204,22 @@ const AppDashboard = () => {
       toast.error(parsed.error.issues[0]?.message || "Confira os campos.");
       return;
     }
-    if (company && value === (company[field] ?? "")) return;
+    if (company && value === (company[field] ?? "")) {
+      setSavedField(field);
+      window.setTimeout(() => setSavedField((current) => current === field ? null : current), 1800);
+      return;
+    }
     setSavingField(field);
-    const payload = {
-      [field]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value,
-      ...(field === "name" && !company ? { slug: slugify(value) } : {}),
+    const fieldPayload = { [field]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value };
+    const createPayload = {
+      ...fieldPayload,
       owner_user_id: user.id,
-      slug: company?.slug || form.slug || slugify(form.name || value),
+      slug: form.slug || slugify(field === "name" ? value : form.name),
       name: field === "name" ? value : form.name,
     };
     const result = company
-      ? await (supabase as any).from("companies").update(payload).eq("id", company.id).select("*").single()
-      : await (supabase as any).from("companies").insert(payload).select("*").single();
+      ? await (supabase as any).from("companies").update(fieldPayload).eq("id", company.id).select("*").single()
+      : await (supabase as any).from("companies").insert(createPayload).select("*").single();
     setSavingField(null);
     if (result.error) {
       toast.error(result.error.message);
@@ -339,7 +343,7 @@ const AppDashboard = () => {
 const PanelList = ({ title, empty, children }: { title: string; empty: string; children: React.ReactNode }) => <section className="rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-3 text-xl font-black">{title}</h2><div className="space-y-3">{children || <p className="text-muted-foreground">{empty}</p>}</div></section>;
 const Row = ({ title, subtitle, meta }: { title: string; subtitle: string; meta: string }) => <div className="rounded-2xl bg-muted p-3"><div className="flex justify-between gap-3"><p className="font-bold">{title}</p><p className="text-xs text-muted-foreground">{meta}</p></div><p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{subtitle}</p></div>;
 const DataCard = ({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) => <section className="rounded-3xl bg-card p-4 shadow-soft"><div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 className="text-2xl font-black">{title}</h2>{action && <div className="flex gap-2">{action}</div>}</div>{children}</section>;
-const InlineConfigField = ({ field, value, onChange, onSave, saving, saved, multiline, inputMode }: { field: ConfigField; value: string; onChange: (value: string) => void; onSave: (field: ConfigField) => void; saving: boolean; saved: boolean; multiline?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"] }) => <div className="space-y-2"><div className="flex items-center justify-between gap-3"><label className="text-sm font-bold">{configFieldLabels[field]}</label><span className="min-w-14 text-right text-xs font-bold text-muted-foreground">{saving ? <Loader2 className="ml-auto h-4 w-4 animate-spin text-primary" /> : saved ? <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="h-4 w-4" /> salvo</span> : null}</span></div>{multiline ? <Textarea value={value} onChange={(e) => onChange(e.target.value)} onBlur={() => onSave(field)} maxLength={180} className="min-h-24 rounded-2xl text-base" /> : <Input value={value} onChange={(e) => onChange(e.target.value)} onBlur={() => onSave(field)} inputMode={inputMode} className="h-12 rounded-2xl" />}</div>;
+const InlineConfigField = ({ field, value, onChange, onSave, saving, saved, multiline, inputMode }: { field: ConfigField; value: string; onChange: (value: string) => void; onSave: (field: ConfigField) => void; saving: boolean; saved: boolean; multiline?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"] }) => <div className="space-y-2"><div className="flex items-center justify-between gap-3"><label className="text-sm font-bold">{configFieldLabels[field]}</label><span className="min-w-14 text-right text-xs font-bold text-muted-foreground">{saving ? <Loader2 className="ml-auto h-4 w-4 animate-spin text-primary" /> : saved ? <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="h-4 w-4" /> salvo</span> : null}</span></div><div className="flex gap-2">{multiline ? <Textarea value={value} onChange={(e) => onChange(e.target.value)} maxLength={180} className="min-h-24 rounded-2xl text-base" /> : <Input value={value} onChange={(e) => onChange(e.target.value)} inputMode={inputMode} className="h-12 rounded-2xl" />}<Button type="button" variant="hero" className="h-12 shrink-0 self-start" onClick={() => onSave(field)} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}</Button></div></div>;
 const Cell = ({ label, value }: { label: string; value: string }) => <div><p className="text-xs font-bold uppercase text-muted-foreground">{label}</p><p className="break-words text-sm font-semibold">{value}</p></div>;
 const Empty = () => <div className="grid min-h-40 place-items-center rounded-3xl bg-muted text-center text-muted-foreground"><div><Star className="mx-auto mb-2 h-8 w-8 text-primary" /><p>Nenhum dado ainda.</p></div></div>;
 
