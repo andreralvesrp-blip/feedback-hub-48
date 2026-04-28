@@ -18,14 +18,19 @@ const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const routeAfterLogin = async () => {
+    const { data, error } = await (supabase as any).from("user_companies").select("id").limit(1);
+    if (error) {
+      toast.error("Não foi possível verificar seu acesso. Tente novamente.");
+      return;
+    }
+    navigate(data && data.length > 0 ? "/app" : "/onboarding", { replace: true });
+  };
+
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) navigate("/app", { replace: true });
-    });
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate("/app", { replace: true });
+      if (data.session) void routeAfterLogin();
     });
-    return () => listener.subscription.unsubscribe();
   }, [navigate]);
 
   const submit = async () => {
@@ -42,6 +47,7 @@ const AuthPage = () => {
       toast.error("Acesso ainda não liberado. Aguarde aprovação.");
       return;
     }
+    await routeAfterLogin();
   };
 
   return (
