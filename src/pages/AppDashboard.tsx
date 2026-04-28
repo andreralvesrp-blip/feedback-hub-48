@@ -7,21 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 type SessionUser = { id: string; email?: string };
-type Company = { id: string; owner_user_id: string; name: string; slug: string; logo_url: string | null; segment: string | null; whatsapp: string | null; google_reviews_url: string | null; responsible_name: string | null; login_email: string | null; alert_phone: string | null; plan: string; public_panel_token: string; };
+type Company = { id: string; owner_user_id: string; name: string; slug: string; logo_url: string | null; segment: string | null; whatsapp: string | null; google_reviews_url: string | null; responsible_name: string | null; login_email: string | null; alert_phone: string | null; plan: string; public_panel_token: string; initial_review_question?: string | null; };
 type ExperienceRating = "loved" | "ok" | "improve";
 type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
 type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
-type Webhook = { id: string; name: string; url: string; is_active: boolean; };
 type MonthOption = { month_start: string; month_label: string };
 type PeriodValue = "current" | string;
 
 const companySchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  name: z.string().trim().min(2, "Informe o nome da empresa.").max(120),
+  alert_phone: z.string().trim().max(30),
+  google_reviews_url: z.string().trim().url("Informe uma URL válida.").or(z.literal("")),
+  initial_review_question: z.string().trim().min(5, "Informe a pergunta inicial.").max(180),
 });
 
 const interestLabel: Record<string, string> = {
@@ -64,7 +66,6 @@ const AppDashboard = () => {
   const [company, setCompany] = useState<Company | null>(null);
   const [responses, setResponses] = useState<ExperienceResponse[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [monthOptions, setMonthOptions] = useState<MonthOption[]>([]);
   const [periodValue, setPeriodValue] = useState<PeriodValue>("current");
   const [currentMonthStart, setCurrentMonthStart] = useState(getCurrentMonthStart);
@@ -73,8 +74,7 @@ const AppDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter" });
-  const [webhookUrl, setWebhookUrl] = useState("");
+  const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "Como foi sua experiência hoje?" });
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
   const panelUrl = company ? `${window.location.origin}/painel/${company.slug}?token=${company.public_panel_token}` : "";
@@ -109,14 +109,12 @@ const AppDashboard = () => {
   const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
     const { start, end } = getMonthRange(monthStart);
-    const [res, bud, hooks] = await Promise.all([
+    const [res, bud] = await Promise.all([
       (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).gte("created_at", start).lte("created_at", end).order("created_at", { ascending: false }).limit(1000),
       (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).gte("created_at", start).lte("created_at", end).order("created_at", { ascending: false }).limit(1000),
-      (supabase as any).from("webhooks").select("*").eq("company_id", companyId).order("created_at", { ascending: false }),
     ]);
     setResponses(res.data ?? []);
     setBudgets(bud.data ?? []);
-    setWebhooks(hooks.data ?? []);
     if (showLoading) setDashboardLoading(false);
   };
 
@@ -143,6 +141,7 @@ const AppDashboard = () => {
         login_email: first?.login_email ?? currentUser.email ?? "",
         alert_phone: first?.alert_phone ?? "",
         plan: first?.plan ?? "starter",
+        initial_review_question: first?.initial_review_question ?? "Como foi sua experiência hoje?",
       });
       if (first) {
         const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: first.id });
@@ -185,13 +184,22 @@ const AppDashboard = () => {
 
   const saveCompany = async () => {
     if (!user) return;
-    const parsed = companySchema.safeParse({ name: form.name, slug: form.slug || slugify(form.name) });
+    const parsed = companySchema.safeParse({ name: form.name, alert_phone: form.alert_phone, google_reviews_url: form.google_reviews_url, initial_review_question: form.initial_review_question });
     if (!parsed.success) {
-      toast.error("Informe nome e slug válido, usando letras, números e hífens.");
+      toast.error(parsed.error.issues[0]?.message || "Confira os campos.");
       return;
     }
     setSaving(true);
-    const payload = { ...form, ...parsed.data, owner_user_id: user.id, logo_url: form.logo_url || null, whatsapp: form.whatsapp || null, google_reviews_url: form.google_reviews_url || null, alert_phone: form.alert_phone || null };
+    const payload = {
+      ...form,
+      ...parsed.data,
+      slug: form.slug || slugify(parsed.data.name),
+      owner_user_id: user.id,
+      logo_url: form.logo_url || null,
+      whatsapp: form.whatsapp || null,
+      google_reviews_url: parsed.data.google_reviews_url || null,
+      alert_phone: parsed.data.alert_phone || null,
+    };
     const result = company
       ? await (supabase as any).from("companies").update(payload).eq("id", company.id).select("*").single()
       : await (supabase as any).from("companies").insert(payload).select("*").single();
@@ -208,20 +216,6 @@ const AppDashboard = () => {
   const updateBudget = async (id: string, status: string) => {
     await (supabase as any).from("budget_requests").update({ status }).eq("id", id);
     setBudgets((items) => items.map((i) => i.id === id ? { ...i, status } : i));
-  };
-
-  const addWebhook = async () => {
-    if (!company || !webhookUrl.startsWith("https://")) {
-      toast.error("Use uma URL https válida.");
-      return;
-    }
-    const { data, error } = await (supabase as any).from("webhooks").insert({ company_id: company.id, url: webhookUrl }).select("*").single();
-    if (error) toast.error(error.message);
-    else {
-      setWebhooks((items) => [data, ...items]);
-      setWebhookUrl("");
-      toast.success("Webhook adicionado.");
-    }
   };
 
   const copy = async (value: string) => {
@@ -317,11 +311,8 @@ const AppDashboard = () => {
             <section className="rounded-3xl bg-gradient-card p-6 shadow-soft"><p className="text-sm font-bold text-primary">Arte simples para impressão</p><h2 className="mt-3 text-3xl font-black">Avalie sua experiência</h2><p className="mt-2 text-muted-foreground">Aponte a câmera do celular para o QR Code e responda em menos de 60 segundos.</p><div className="mt-6 rounded-2xl bg-card p-3 text-sm break-all">{reviewUrl}</div>{panelUrl && <Button asChild variant="quiet" className="mt-4"><Link to={panelUrl} target="_blank"><ExternalLink className="h-4 w-4" /> Painel público</Link></Button>}</section>
           </TabsContent>
 
-          <TabsContent value="settings" className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-            <section className="rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-4 text-2xl font-black">Configurações da empresa</h2><div className="grid gap-3 sm:grid-cols-2">{[
-              ["name", "Nome"], ["slug", "Slug"], ["logo_url", "Logo (URL)"], ["segment", "Segmento"], ["whatsapp", "WhatsApp"], ["google_reviews_url", "Link Google Reviews"], ["responsible_name", "Nome do responsável"], ["login_email", "Email login"], ["alert_phone", "Telefone para alerta"], ["plan", "Plano"],
-            ].map(([key, label]) => <Input key={key} value={(form as any)[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: key === "slug" ? slugify(e.target.value) : e.target.value }))} placeholder={label} className="h-13 rounded-2xl" />)}</div><Button variant="hero" size="touch" className="mt-4 w-full" onClick={saveCompany} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</Button></section>
-            <section className="rounded-3xl bg-card p-5 shadow-soft"><h2 className="text-2xl font-black">Webhooks</h2><p className="mt-1 text-sm text-muted-foreground">Receba alertas quando chegar novo orçamento.</p><div className="mt-4 flex gap-2"><Input value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} placeholder="https://..." className="rounded-2xl" /><Button variant="warm" onClick={addWebhook}>Adicionar</Button></div><div className="mt-4 space-y-2">{webhooks.map((w) => <div key={w.id} className="rounded-2xl bg-muted p-3 text-sm break-all">{w.url}</div>)}</div></section>
+          <TabsContent value="settings">
+            <section className="mx-auto max-w-2xl rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-black">Configurações</h2><div className="grid gap-4"><div className="space-y-2"><label className="text-sm font-bold">Nome da empresa</label><Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="h-12 rounded-2xl" /></div><div className="space-y-2"><label className="text-sm font-bold">Telefone para envio de novo orçamento</label><Input value={form.alert_phone} onChange={(e) => setForm((f) => ({ ...f, alert_phone: e.target.value }))} inputMode="tel" className="h-12 rounded-2xl" /></div><div className="space-y-2"><label className="text-sm font-bold">URL de review do Google</label><Input value={form.google_reviews_url} onChange={(e) => setForm((f) => ({ ...f, google_reviews_url: e.target.value }))} inputMode="url" className="h-12 rounded-2xl" /></div><div className="space-y-2"><label className="text-sm font-bold">Pergunta inicial para avaliação</label><Textarea value={form.initial_review_question} onChange={(e) => setForm((f) => ({ ...f, initial_review_question: e.target.value }))} maxLength={180} className="min-h-24 rounded-2xl text-base" /></div></div><Button variant="hero" size="touch" className="mt-5 w-full" onClick={saveCompany} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</Button></section>
           </TabsContent>
         </Tabs>
       </div>

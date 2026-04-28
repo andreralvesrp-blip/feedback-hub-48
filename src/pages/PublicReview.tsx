@@ -17,6 +17,7 @@ type PublicCompany = {
   segment: string | null;
   whatsapp: string | null;
   google_reviews_url: string | null;
+  initial_review_question: string | null;
 };
 
 const contactSchema = z.object({
@@ -243,7 +244,7 @@ const PublicReview = () => {
           {step === "experience" && (
             <div className="mx-auto w-full max-w-sm space-y-8 py-4 text-center">
               <div className="space-y-3">
-                <h1 className="text-3xl font-black leading-tight">Como foi sua experiência hoje no Kids Point?</h1>
+                <h1 className="text-3xl font-black leading-tight">{company.initial_review_question || "Como foi sua experiência hoje?"}</h1>
               </div>
               <div className="space-y-3">
                 {reactionOptions.map((option) => {

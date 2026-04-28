@@ -80,6 +80,7 @@ export type Database = {
           created_at: string
           google_reviews_url: string | null
           id: string
+          initial_review_question: string
           is_active: boolean
           login_email: string | null
           logo_url: string | null
@@ -98,6 +99,7 @@ export type Database = {
           created_at?: string
           google_reviews_url?: string | null
           id?: string
+          initial_review_question?: string
           is_active?: boolean
           login_email?: string | null
           logo_url?: string | null
@@ -116,6 +118,7 @@ export type Database = {
           created_at?: string
           google_reviews_url?: string | null
           id?: string
+          initial_review_question?: string
           is_active?: boolean
           login_email?: string | null
           logo_url?: string | null
@@ -263,6 +266,7 @@ export type Database = {
         Returns: {
           google_reviews_url: string
           id: string
+          initial_review_question: string
           logo_url: string
           name: string
           segment: string
