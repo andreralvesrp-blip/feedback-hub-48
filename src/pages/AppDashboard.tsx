@@ -248,11 +248,11 @@ const AppDashboard = () => {
   };
 
   const downloadResponsesCsv = () => {
-    const rows = responses.map((r) => [formatDate(r.created_at), experienceLabels[r.experience_rating], r.comment || "", r.name || "", r.whatsapp || "", "QR", r.wants_google_review || r.redirected_to_google ? "sim" : "não"]);
-    const csv = [["Data", "Experiência", "Comentário", "Nome", "WhatsApp", "Origem", "Google"], ...rows]
+    const rows = visibleResponses.map((r) => [formatDate(r.created_at), experienceLabels[r.experience_rating], r.comment || "", r.name || "", r.whatsapp || "", r.wants_google_review || r.redirected_to_google ? "Sim" : "Não"]);
+    const csv = [["Data", "Experiência", "Comentário", "Nome", "WhatsApp", "Google"], ...rows]
       .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
       .join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
     a.download = `experiencias-${company?.slug || "empresa"}.csv`;
