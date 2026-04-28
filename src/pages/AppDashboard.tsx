@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, QrCode, Settings, Star, Table2 } from "lucide-react";
+import { BarChart3, CheckCircle2, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, QrCode, Settings, Star, Table2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
@@ -25,6 +25,13 @@ const companySchema = z.object({
   google_reviews_url: z.string().trim().url("Informe uma URL válida.").or(z.literal("")),
   initial_review_question: z.string().trim().min(5, "Informe a pergunta inicial.").max(180),
 });
+const companyFieldSchemas = {
+  name: companySchema.shape.name,
+  alert_phone: companySchema.shape.alert_phone,
+  google_reviews_url: companySchema.shape.google_reviews_url,
+  initial_review_question: companySchema.shape.initial_review_question,
+};
+type ConfigField = keyof typeof companyFieldSchemas;
 
 const interestLabel: Record<string, string> = {
   festa_infantil: "Festa infantil",
@@ -73,7 +80,8 @@ const AppDashboard = () => {
   const [budgetStatusFilter, setBudgetStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savingField, setSavingField] = useState<ConfigField | null>(null);
+  const [savedField, setSavedField] = useState<ConfigField | null>(null);
   const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "Como foi sua experiência hoje?" });
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
