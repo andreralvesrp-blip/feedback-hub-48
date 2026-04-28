@@ -190,35 +190,37 @@ const AppDashboard = () => {
     };
   }, [company, currentMonthStart, periodValue]);
 
-  const saveCompany = async () => {
+  const saveCompanyField = async (field: ConfigField) => {
     if (!user) return;
-    const parsed = companySchema.safeParse({ name: form.name, alert_phone: form.alert_phone, google_reviews_url: form.google_reviews_url, initial_review_question: form.initial_review_question });
+    const value = form[field].trim();
+    const parsed = companyFieldSchemas[field].safeParse(value);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message || "Confira os campos.");
       return;
     }
-    setSaving(true);
+    if (company && value === (company[field] ?? "")) return;
+    setSavingField(field);
     const payload = {
-      ...form,
-      ...parsed.data,
-      slug: form.slug || slugify(parsed.data.name),
+      [field]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value,
+      ...(field === "name" && !company ? { slug: slugify(value) } : {}),
       owner_user_id: user.id,
-      logo_url: form.logo_url || null,
-      whatsapp: form.whatsapp || null,
-      google_reviews_url: parsed.data.google_reviews_url || null,
-      alert_phone: parsed.data.alert_phone || null,
+      slug: company?.slug || form.slug || slugify(form.name || value),
+      name: field === "name" ? value : form.name,
     };
     const result = company
       ? await (supabase as any).from("companies").update(payload).eq("id", company.id).select("*").single()
       : await (supabase as any).from("companies").insert(payload).select("*").single();
-    setSaving(false);
+    setSavingField(null);
     if (result.error) {
       toast.error(result.error.message);
       return;
     }
     setCompany(result.data);
-    toast.success("Configurações salvas.");
-    await loadData(result.data.id);
+    setForm((current) => ({ ...current, ...result.data }));
+    setSavedField(field);
+    window.setTimeout(() => setSavedField((current) => current === field ? null : current), 1800);
+    toast.success("Salvo.");
+    if (!company) await loadData(result.data.id);
   };
 
   const updateBudget = async (id: string, status: string) => {
