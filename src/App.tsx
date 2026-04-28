@@ -15,6 +15,7 @@ const PublicReview = lazy(() => import("./pages/PublicReview.tsx"));
 const RecoverPassword = lazy(() => import("./pages/RecoverPassword.tsx"));
 const RequestAccess = lazy(() => import("./pages/RequestAccess.tsx"));
 const NewPassword = lazy(() => import("./pages/NewPassword.tsx"));
+const Onboarding = lazy(() => import("./pages/Onboarding.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/recuperar-senha" element={<RecoverPassword />} />
             <Route path="/nova-senha" element={<NewPassword />} />
             <Route path="/solicitar-acesso" element={<RequestAccess />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/app" element={<AppDashboard />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/avaliar/:slug" element={<PublicReview />} />
