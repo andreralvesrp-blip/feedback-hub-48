@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const AppDashboard = lazy(() => import("./pages/AppDashboard.tsx"));
+const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
 const AuthPage = lazy(() => import("./pages/AuthPage.tsx"));
 const Index = lazy(() => import("./pages/Index.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/app" element={<AppDashboard />} />
+            <Route path="/admin" element={<AdminPage />} />
             <Route path="/avaliar/:slug" element={<PublicReview />} />
             <Route path="/painel/:slug" element={<PublicPanel />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

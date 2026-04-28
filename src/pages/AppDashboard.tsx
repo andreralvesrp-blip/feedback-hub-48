@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, CheckCircle2, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, QrCode, Settings, Star, Table2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 type SessionUser = { id: string; email?: string };
 type Company = { id: string; owner_user_id: string; name: string; slug: string; logo_url: string | null; segment: string | null; whatsapp: string | null; google_reviews_url: string | null; responsible_name: string | null; login_email: string | null; alert_phone: string | null; plan: string; public_panel_token: string; initial_review_question?: string | null; };
+type UserCompany = { company_id: string; role: "super_admin" | "company_admin" | "viewer"; companies: Company | null };
 type ExperienceRating = "loved" | "ok" | "improve";
 type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
 type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
@@ -74,9 +75,11 @@ const getPeriodMonthStart = (period: PeriodValue) => period === "current" ? getC
 
 const AppDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const qrRef = useRef<SVGSVGElement | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
+  const [memberships, setMemberships] = useState<UserCompany[]>([]);
   const [responses, setResponses] = useState<ExperienceResponse[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [monthOptions, setMonthOptions] = useState<MonthOption[]>([]);
@@ -92,6 +95,9 @@ const AppDashboard = () => {
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
   const panelUrl = company ? `${window.location.origin}/painel/${company.slug}?token=${company.public_panel_token}` : "";
+  const activeMembership = memberships.find((item) => item.company_id === company?.id);
+  const isSuperAdmin = memberships.some((item) => item.role === "super_admin");
+  const canManageCompany = activeMembership?.role === "company_admin" || activeMembership?.role === "super_admin" || isSuperAdmin;
 
   const stats = useMemo(() => {
     const total = responses.length;
@@ -141,8 +147,16 @@ const AppDashboard = () => {
       }
       const currentUser = { id: data.session.user.id, email: data.session.user.email ?? "" };
       setUser(currentUser);
-      const { data: companies } = await (supabase as any).from("companies").select("*").eq("owner_user_id", currentUser.id).order("created_at", { ascending: true }).limit(1);
-      const first = companies?.[0] ?? null;
+      const { data: linkedCompanies, error: linkedError } = await (supabase as any).from("user_companies").select("company_id, role, companies(*)").order("created_at", { ascending: true });
+      if (linkedError) {
+        toast.error(linkedError.message || "Não foi possível carregar suas empresas.");
+        setLoading(false);
+        return;
+      }
+      const linked = (linkedCompanies ?? []) as UserCompany[];
+      setMemberships(linked);
+      const requestedCompanyId = searchParams.get("company");
+      const first = linked.find((item) => item.company_id === requestedCompanyId)?.companies ?? linked[0]?.companies ?? null;
       setCompany(first);
       setForm({
         name: first?.name ?? "",
@@ -168,7 +182,7 @@ const AppDashboard = () => {
       setLoading(false);
     };
     init();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   useEffect(() => {
     const syncCurrentMonth = () => {
@@ -210,7 +224,8 @@ const AppDashboard = () => {
       return;
     }
     setSavingField(field);
-    const fieldPayload = { [field]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value };
+    const normalizedField = field === "google_reviews_url" ? "review_google_url" : field === "initial_review_question" ? "initial_question" : field;
+    const fieldPayload = { [normalizedField]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value };
     const createPayload = {
       ...fieldPayload,
       owner_user_id: user.id,
@@ -225,8 +240,9 @@ const AppDashboard = () => {
       toast.error(result.error.message);
       return;
     }
-    setCompany(result.data);
-    setForm((current) => ({ ...current, ...result.data }));
+    const nextCompany = { ...result.data, google_reviews_url: result.data.review_google_url ?? result.data.google_reviews_url, initial_review_question: result.data.initial_question ?? result.data.initial_review_question };
+    setCompany(nextCompany);
+    setForm((current) => ({ ...current, ...nextCompany }));
     setSavedField(field);
     window.setTimeout(() => setSavedField((current) => current === field ? null : current), 1800);
     toast.success("Salvo.");
@@ -234,8 +250,21 @@ const AppDashboard = () => {
   };
 
   const updateBudget = async (id: string, status: string) => {
+    if (!canManageCompany) return toast.error("Você tem acesso somente leitura.");
     await (supabase as any).from("budget_requests").update({ status }).eq("id", id);
     setBudgets((items) => items.map((i) => i.id === id ? { ...i, status } : i));
+  };
+
+  const switchCompany = async (companyId: string) => {
+    const nextCompany = memberships.find((item) => item.company_id === companyId)?.companies ?? null;
+    if (!nextCompany) return;
+    setCompany(nextCompany);
+    setSearchParams({ company: companyId });
+    setForm((current) => ({ ...current, ...nextCompany, google_reviews_url: nextCompany.google_reviews_url ?? "", initial_review_question: nextCompany.initial_review_question ?? "", alert_phone: nextCompany.alert_phone ?? "" }));
+    const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: nextCompany.id });
+    setMonthOptions(months ?? []);
+    setPeriodValue("current");
+    await loadData(nextCompany.id, getCurrentMonthStart());
   };
 
   const copy = async (value: string) => {
@@ -295,12 +324,17 @@ const AppDashboard = () => {
             <p className="text-sm text-muted-foreground">Captura Eventos</p>
             <h1 className="text-xl font-black leading-tight">{company?.name || "Configure sua empresa"}</h1>
           </div>
-          <Button variant="quiet" size="icon" onClick={signOut} aria-label="Sair"><LogOut className="h-4 w-4" /></Button>
+          <div className="flex items-center gap-2">
+            {memberships.length > 1 && <Select value={company?.id} onValueChange={switchCompany}><SelectTrigger className="hidden w-56 rounded-2xl sm:flex"><SelectValue /></SelectTrigger><SelectContent>{memberships.map((item) => item.companies && <SelectItem key={item.company_id} value={item.company_id}>{item.companies.name}</SelectItem>)}</SelectContent></Select>}
+            {isSuperAdmin && <Button asChild variant="quiet"><Link to="/admin">Admin</Link></Button>}
+            <Button variant="quiet" size="icon" onClick={signOut} aria-label="Sair"><LogOut className="h-4 w-4" /></Button>
+          </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-6xl px-4 py-5">
         <Tabs defaultValue={company ? "dashboard" : "settings"} className="space-y-5">
+          {memberships.length > 1 && <Select value={company?.id} onValueChange={switchCompany}><SelectTrigger className="h-12 rounded-2xl sm:hidden"><SelectValue /></SelectTrigger><SelectContent>{memberships.map((item) => item.companies && <SelectItem key={item.company_id} value={item.company_id}>{item.companies.name}</SelectItem>)}</SelectContent></Select>}
           <TabsList className="grid h-auto grid-cols-5 rounded-2xl bg-muted p-1">
             <TabsTrigger value="dashboard" className="rounded-xl"><BarChart3 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Painel</span></TabsTrigger>
             <TabsTrigger value="responses" className="rounded-xl"><Table2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Respostas</span></TabsTrigger>
@@ -332,7 +366,7 @@ const AppDashboard = () => {
           </TabsContent>
 
           <TabsContent value="settings">
-            <section className="mx-auto max-w-2xl rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-black">Configurações</h2><div className="grid gap-4"><InlineConfigField field="name" value={form.name} onChange={(value) => setForm((f) => ({ ...f, name: value }))} onSave={saveCompanyField} saving={savingField === "name"} saved={savedField === "name"} /><InlineConfigField field="alert_phone" value={form.alert_phone} onChange={(value) => setForm((f) => ({ ...f, alert_phone: value }))} onSave={saveCompanyField} saving={savingField === "alert_phone"} saved={savedField === "alert_phone"} inputMode="tel" /><InlineConfigField field="google_reviews_url" value={form.google_reviews_url} onChange={(value) => setForm((f) => ({ ...f, google_reviews_url: value }))} onSave={saveCompanyField} saving={savingField === "google_reviews_url"} saved={savedField === "google_reviews_url"} inputMode="url" /><InlineConfigField field="initial_review_question" value={form.initial_review_question} onChange={(value) => setForm((f) => ({ ...f, initial_review_question: value }))} onSave={saveCompanyField} saving={savingField === "initial_review_question"} saved={savedField === "initial_review_question"} multiline /></div></section>
+            <section className="mx-auto max-w-2xl rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-black">Configurações</h2><div className="grid gap-4"><InlineConfigField field="name" value={form.name} onChange={(value) => setForm((f) => ({ ...f, name: value }))} onSave={saveCompanyField} saving={savingField === "name"} saved={savedField === "name"} disabled={!canManageCompany} /><InlineConfigField field="alert_phone" value={form.alert_phone} onChange={(value) => setForm((f) => ({ ...f, alert_phone: value }))} onSave={saveCompanyField} saving={savingField === "alert_phone"} saved={savedField === "alert_phone"} inputMode="tel" disabled={!canManageCompany} /><InlineConfigField field="google_reviews_url" value={form.google_reviews_url} onChange={(value) => setForm((f) => ({ ...f, google_reviews_url: value }))} onSave={saveCompanyField} saving={savingField === "google_reviews_url"} saved={savedField === "google_reviews_url"} inputMode="url" disabled={!canManageCompany} /><InlineConfigField field="initial_review_question" value={form.initial_review_question} onChange={(value) => setForm((f) => ({ ...f, initial_review_question: value }))} onSave={saveCompanyField} saving={savingField === "initial_review_question"} saved={savedField === "initial_review_question"} multiline disabled={!canManageCompany} /></div></section>
           </TabsContent>
         </Tabs>
       </div>
@@ -343,8 +377,8 @@ const AppDashboard = () => {
 const PanelList = ({ title, empty, children }: { title: string; empty: string; children: React.ReactNode }) => <section className="rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-3 text-xl font-black">{title}</h2><div className="space-y-3">{children || <p className="text-muted-foreground">{empty}</p>}</div></section>;
 const Row = ({ title, subtitle, meta }: { title: string; subtitle: string; meta: string }) => <div className="rounded-2xl bg-muted p-3"><div className="flex justify-between gap-3"><p className="font-bold">{title}</p><p className="text-xs text-muted-foreground">{meta}</p></div><p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{subtitle}</p></div>;
 const DataCard = ({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) => <section className="rounded-3xl bg-card p-4 shadow-soft"><div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 className="text-2xl font-black">{title}</h2>{action && <div className="flex gap-2">{action}</div>}</div>{children}</section>;
-type InlineConfigFieldProps = { field: ConfigField; value: string; onChange: (value: string) => void; onSave: (field: ConfigField) => void; saving: boolean; saved: boolean; multiline?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"] };
-const InlineConfigField = forwardRef<HTMLDivElement, InlineConfigFieldProps>(({ field, value, onChange, onSave, saving, saved, multiline, inputMode }, ref) => <div ref={ref} className="space-y-2"><div className="flex items-center justify-between gap-3"><label className="text-sm font-bold">{configFieldLabels[field]}</label><span className="min-w-14 text-right text-xs font-bold text-muted-foreground">{saving ? <Loader2 className="ml-auto h-4 w-4 animate-spin text-primary" /> : saved ? <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="h-4 w-4" /> salvo</span> : null}</span></div><div className="flex gap-2">{multiline ? <Textarea value={value} onChange={(e) => onChange(e.target.value)} maxLength={180} className="min-h-24 rounded-2xl text-base" /> : <Input value={value} onChange={(e) => onChange(e.target.value)} inputMode={inputMode} className="h-12 rounded-2xl" />}<Button type="button" variant="hero" className="h-12 shrink-0 self-start" onClick={() => onSave(field)} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}</Button></div></div>);
+type InlineConfigFieldProps = { field: ConfigField; value: string; onChange: (value: string) => void; onSave: (field: ConfigField) => void; saving: boolean; saved: boolean; multiline?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]; disabled?: boolean };
+const InlineConfigField = forwardRef<HTMLDivElement, InlineConfigFieldProps>(({ field, value, onChange, onSave, saving, saved, multiline, inputMode, disabled }, ref) => <div ref={ref} className="space-y-2"><div className="flex items-center justify-between gap-3"><label className="text-sm font-bold">{configFieldLabels[field]}</label><span className="min-w-14 text-right text-xs font-bold text-muted-foreground">{saving ? <Loader2 className="ml-auto h-4 w-4 animate-spin text-primary" /> : saved ? <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="h-4 w-4" /> salvo</span> : null}</span></div><div className="flex gap-2">{multiline ? <Textarea value={value} onChange={(e) => onChange(e.target.value)} maxLength={180} className="min-h-24 rounded-2xl text-base" disabled={disabled} /> : <Input value={value} onChange={(e) => onChange(e.target.value)} inputMode={inputMode} className="h-12 rounded-2xl" disabled={disabled} />}<Button type="button" variant="hero" className="h-12 shrink-0 self-start" onClick={() => onSave(field)} disabled={saving || disabled}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}</Button></div></div>);
 InlineConfigField.displayName = "InlineConfigField";
 const Cell = ({ label, value }: { label: string; value: string }) => <div><p className="text-xs font-bold uppercase text-muted-foreground">{label}</p><p className="break-words text-sm font-semibold">{value}</p></div>;
 const Empty = () => <div className="grid min-h-40 place-items-center rounded-3xl bg-muted text-center text-muted-foreground"><div><Star className="mx-auto mb-2 h-8 w-8 text-primary" /><p>Nenhum dado ainda.</p></div></div>;
