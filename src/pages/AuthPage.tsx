@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Loader2, LockKeyhole, Mail } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +62,12 @@ const AuthPage = () => {
               <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="h-14 rounded-lg pl-11 text-base" />
             </div>
-            <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Senha" className="h-14 rounded-lg text-base" />
+            <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Senha" autoComplete="current-password" className="h-14 rounded-lg text-base" />
+            <div className="flex justify-end">
+              <Link to="/recuperar-senha" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                Esqueci minha senha
+              </Link>
+            </div>
           </div>
           <Button variant="hero" size="touch" className="w-full" onClick={submit} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />} Entrar
