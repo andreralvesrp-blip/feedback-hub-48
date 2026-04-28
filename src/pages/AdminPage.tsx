@@ -44,6 +44,7 @@ const AdminPage = () => {
   const [linkingUser, setLinkingUser] = useState(false);
   const [companies, setCompanies] = useState<AdminCompany[]>([]);
   const [companyForm, setCompanyForm] = useState({ name: "", slug: "", alert_phone: "", googleUrl: "", initialQuestion: "Como foi sua experiência hoje?" });
+  const [newUserForm, setNewUserForm] = useState({ email: "", password: "", companyId: "", role: "viewer" as CompanyRole });
   const [linkForm, setLinkForm] = useState<{ userId: string; companyId: string; role: CompanyRole }>({ userId: "", companyId: "", role: "viewer" });
 
   const selectedCompany = useMemo(() => companies.find((company) => company.id === linkForm.companyId), [companies, linkForm.companyId]);
@@ -57,6 +58,7 @@ const AdminPage = () => {
     }
     setCompanies(data ?? []);
     if (!linkForm.companyId && data?.[0]) setLinkForm((current) => ({ ...current, companyId: data[0].id }));
+    if (!newUserForm.companyId && data?.[0]) setNewUserForm((current) => ({ ...current, companyId: data[0].id }));
   };
 
   useEffect(() => {
@@ -117,6 +119,22 @@ const AdminPage = () => {
     setLinkForm((current) => ({ ...current, userId: "", role: "viewer" }));
   };
 
+  const createUser = async () => {
+    if (!newUserForm.email.includes("@") || newUserForm.password.length < 6 || !newUserForm.companyId) {
+      toast.error("Informe email, senha e empresa.");
+      return;
+    }
+    setLinkingUser(true);
+    const { error } = await supabase.functions.invoke("admin-create-user", { body: { email: newUserForm.email, password: newUserForm.password, company_id: newUserForm.companyId, role: newUserForm.role } });
+    setLinkingUser(false);
+    if (error) {
+      toast.error(error.message || "Não foi possível criar o usuário.");
+      return;
+    }
+    toast.success("Usuário criado e vinculado.");
+    setNewUserForm((current) => ({ ...current, email: "", password: "", role: "viewer" }));
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate("/login", { replace: true });
@@ -158,9 +176,21 @@ const AdminPage = () => {
         <section className="rounded-3xl bg-card p-5 shadow-soft">
           <div className="mb-5 flex items-center gap-3">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><UserPlus className="h-5 w-5" /></div>
-            <h2 className="text-2xl font-black">Vincular usuário</h2>
+            <h2 className="text-2xl font-black">Criar usuário</h2>
           </div>
           <div className="grid gap-3">
+            <Input value={newUserForm.email} onChange={(e) => setNewUserForm((f) => ({ ...f, email: e.target.value }))} placeholder="Email" className="h-12 rounded-2xl" />
+            <Input value={newUserForm.password} onChange={(e) => setNewUserForm((f) => ({ ...f, password: e.target.value }))} type="password" placeholder="Senha inicial" className="h-12 rounded-2xl" />
+            <Select value={newUserForm.companyId} onValueChange={(value) => setNewUserForm((f) => ({ ...f, companyId: value }))}>
+              <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Empresa" /></SelectTrigger>
+              <SelectContent>{companies.map((company) => <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value={newUserForm.role} onValueChange={(value) => setNewUserForm((f) => ({ ...f, role: value as CompanyRole }))}>
+              <SelectTrigger className="h-12 rounded-2xl"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="viewer">Viewer</SelectItem><SelectItem value="company_admin">Company admin</SelectItem><SelectItem value="super_admin">Super admin</SelectItem></SelectContent>
+            </Select>
+            <Button variant="hero" size="touch" onClick={createUser} disabled={linkingUser}>{linkingUser && <Loader2 className="h-4 w-4 animate-spin" />} Criar e vincular</Button>
+            <div className="my-2 h-px bg-border" />
             <Input value={linkForm.userId} onChange={(e) => setLinkForm((f) => ({ ...f, userId: e.target.value }))} placeholder="ID do usuário" className="h-12 rounded-2xl" />
             <Select value={linkForm.companyId} onValueChange={(value) => setLinkForm((f) => ({ ...f, companyId: value }))}>
               <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Empresa" /></SelectTrigger>
