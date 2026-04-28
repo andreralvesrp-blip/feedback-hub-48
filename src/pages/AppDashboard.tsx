@@ -12,8 +12,9 @@ import { toast } from "sonner";
 
 type SessionUser = { id: string; email?: string };
 type Company = { id: string; owner_user_id: string; name: string; slug: string; logo_url: string | null; segment: string | null; whatsapp: string | null; google_reviews_url: string | null; responsible_name: string | null; login_email: string | null; alert_phone: string | null; plan: string; public_panel_token: string; };
-type Nps = { id: string; created_at: string; score: number; classification: string; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
-type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; nps_score: number | null; status: string; };
+type ExperienceRating = "loved" | "ok" | "improve";
+type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
+type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
 type Webhook = { id: string; name: string; url: string; is_active: boolean; };
 
 const companySchema = z.object({
@@ -32,6 +33,8 @@ const interestLabel: Record<string, string> = {
 const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perdido"];
 const responseStatus = ["novo", "visto", "resolvido"];
 const periods = { month: "Mês fechado", thirty: "Últimos 30 dias" };
+const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Pode melhorar" };
+const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Pode melhorar" };
 
 const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
@@ -42,10 +45,11 @@ const AppDashboard = () => {
   const qrRef = useRef<SVGSVGElement | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
-  const [responses, setResponses] = useState<Nps[]>([]);
+  const [responses, setResponses] = useState<ExperienceResponse[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [period, setPeriod] = useState<"month" | "thirty">("thirty");
+  const [experienceFilter, setExperienceFilter] = useState<"all" | ExperienceRating>("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter" });
