@@ -49,7 +49,7 @@ type ExperienceRating = "loved" | "ok" | "improve";
 const experienceLabel: Record<ExperienceRating, string> = {
   loved: "Adorei",
   ok: "Foi ok",
-  improve: "Pode melhorar",
+  improve: "Não gostei",
 };
 
 const reactionOptions = [
