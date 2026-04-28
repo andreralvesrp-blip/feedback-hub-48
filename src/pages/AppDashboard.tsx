@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, QrCode, Settings, Star, Table2 } from "lucide-react";
+import { BarChart3, CheckCircle2, Copy, Download, ExternalLink, Loader2, LogOut, MessageCircle, QrCode, Settings, Star, Table2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
@@ -25,6 +25,13 @@ const companySchema = z.object({
   google_reviews_url: z.string().trim().url("Informe uma URL válida.").or(z.literal("")),
   initial_review_question: z.string().trim().min(5, "Informe a pergunta inicial.").max(180),
 });
+const companyFieldSchemas = {
+  name: companySchema.shape.name,
+  alert_phone: companySchema.shape.alert_phone,
+  google_reviews_url: companySchema.shape.google_reviews_url,
+  initial_review_question: companySchema.shape.initial_review_question,
+};
+type ConfigField = keyof typeof companyFieldSchemas;
 
 const interestLabel: Record<string, string> = {
   festa_infantil: "Festa infantil",
@@ -38,6 +45,12 @@ const budgetStatus = ["novo", "contatado", "orcamento_enviado", "fechado", "perd
 const experienceLabels: Record<ExperienceRating, string> = { loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const experienceFilters = { all: "Todas", loved: "Adorei", ok: "Foi ok", improve: "Não gostei" };
 const budgetStatusLabels: Record<string, string> = { novo: "Novo", contatado: "Contatado", orcamento_enviado: "Orçamento enviado", fechado: "Fechado", perdido: "Perdido" };
+const configFieldLabels: Record<ConfigField, string> = {
+  name: "Nome da empresa",
+  alert_phone: "Telefone para envio de novo orçamento",
+  google_reviews_url: "URL de review do Google",
+  initial_review_question: "Pergunta inicial para avaliação",
+};
 
 const slugify = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "minha-empresa";
 const cleanPhone = (value: string) => value.replace(/[^0-9]/g, "");
@@ -73,7 +86,8 @@ const AppDashboard = () => {
   const [budgetStatusFilter, setBudgetStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savingField, setSavingField] = useState<ConfigField | null>(null);
+  const [savedField, setSavedField] = useState<ConfigField | null>(null);
   const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "Como foi sua experiência hoje?" });
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
@@ -182,35 +196,37 @@ const AppDashboard = () => {
     };
   }, [company, currentMonthStart, periodValue]);
 
-  const saveCompany = async () => {
+  const saveCompanyField = async (field: ConfigField) => {
     if (!user) return;
-    const parsed = companySchema.safeParse({ name: form.name, alert_phone: form.alert_phone, google_reviews_url: form.google_reviews_url, initial_review_question: form.initial_review_question });
+    const value = form[field].trim();
+    const parsed = companyFieldSchemas[field].safeParse(value);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message || "Confira os campos.");
       return;
     }
-    setSaving(true);
+    if (company && value === (company[field] ?? "")) return;
+    setSavingField(field);
     const payload = {
-      ...form,
-      ...parsed.data,
-      slug: form.slug || slugify(parsed.data.name),
+      [field]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value,
+      ...(field === "name" && !company ? { slug: slugify(value) } : {}),
       owner_user_id: user.id,
-      logo_url: form.logo_url || null,
-      whatsapp: form.whatsapp || null,
-      google_reviews_url: parsed.data.google_reviews_url || null,
-      alert_phone: parsed.data.alert_phone || null,
+      slug: company?.slug || form.slug || slugify(form.name || value),
+      name: field === "name" ? value : form.name,
     };
     const result = company
       ? await (supabase as any).from("companies").update(payload).eq("id", company.id).select("*").single()
       : await (supabase as any).from("companies").insert(payload).select("*").single();
-    setSaving(false);
+    setSavingField(null);
     if (result.error) {
       toast.error(result.error.message);
       return;
     }
     setCompany(result.data);
-    toast.success("Configurações salvas.");
-    await loadData(result.data.id);
+    setForm((current) => ({ ...current, ...result.data }));
+    setSavedField(field);
+    window.setTimeout(() => setSavedField((current) => current === field ? null : current), 1800);
+    toast.success("Salvo.");
+    if (!company) await loadData(result.data.id);
   };
 
   const updateBudget = async (id: string, status: string) => {
@@ -312,7 +328,7 @@ const AppDashboard = () => {
           </TabsContent>
 
           <TabsContent value="settings">
-            <section className="mx-auto max-w-2xl rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-black">Configurações</h2><div className="grid gap-4"><div className="space-y-2"><label className="text-sm font-bold">Nome da empresa</label><Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="h-12 rounded-2xl" /></div><div className="space-y-2"><label className="text-sm font-bold">Telefone para envio de novo orçamento</label><Input value={form.alert_phone} onChange={(e) => setForm((f) => ({ ...f, alert_phone: e.target.value }))} inputMode="tel" className="h-12 rounded-2xl" /></div><div className="space-y-2"><label className="text-sm font-bold">URL de review do Google</label><Input value={form.google_reviews_url} onChange={(e) => setForm((f) => ({ ...f, google_reviews_url: e.target.value }))} inputMode="url" className="h-12 rounded-2xl" /></div><div className="space-y-2"><label className="text-sm font-bold">Pergunta inicial para avaliação</label><Textarea value={form.initial_review_question} onChange={(e) => setForm((f) => ({ ...f, initial_review_question: e.target.value }))} maxLength={180} className="min-h-24 rounded-2xl text-base" /></div></div><Button variant="hero" size="touch" className="mt-5 w-full" onClick={saveCompany} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</Button></section>
+            <section className="mx-auto max-w-2xl rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-black">Configurações</h2><div className="grid gap-4"><InlineConfigField field="name" value={form.name} onChange={(value) => setForm((f) => ({ ...f, name: value }))} onSave={saveCompanyField} saving={savingField === "name"} saved={savedField === "name"} /><InlineConfigField field="alert_phone" value={form.alert_phone} onChange={(value) => setForm((f) => ({ ...f, alert_phone: value }))} onSave={saveCompanyField} saving={savingField === "alert_phone"} saved={savedField === "alert_phone"} inputMode="tel" /><InlineConfigField field="google_reviews_url" value={form.google_reviews_url} onChange={(value) => setForm((f) => ({ ...f, google_reviews_url: value }))} onSave={saveCompanyField} saving={savingField === "google_reviews_url"} saved={savedField === "google_reviews_url"} inputMode="url" /><InlineConfigField field="initial_review_question" value={form.initial_review_question} onChange={(value) => setForm((f) => ({ ...f, initial_review_question: value }))} onSave={saveCompanyField} saving={savingField === "initial_review_question"} saved={savedField === "initial_review_question"} multiline /></div></section>
           </TabsContent>
         </Tabs>
       </div>
@@ -323,6 +339,7 @@ const AppDashboard = () => {
 const PanelList = ({ title, empty, children }: { title: string; empty: string; children: React.ReactNode }) => <section className="rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-3 text-xl font-black">{title}</h2><div className="space-y-3">{children || <p className="text-muted-foreground">{empty}</p>}</div></section>;
 const Row = ({ title, subtitle, meta }: { title: string; subtitle: string; meta: string }) => <div className="rounded-2xl bg-muted p-3"><div className="flex justify-between gap-3"><p className="font-bold">{title}</p><p className="text-xs text-muted-foreground">{meta}</p></div><p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{subtitle}</p></div>;
 const DataCard = ({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) => <section className="rounded-3xl bg-card p-4 shadow-soft"><div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 className="text-2xl font-black">{title}</h2>{action && <div className="flex gap-2">{action}</div>}</div>{children}</section>;
+const InlineConfigField = ({ field, value, onChange, onSave, saving, saved, multiline, inputMode }: { field: ConfigField; value: string; onChange: (value: string) => void; onSave: (field: ConfigField) => void; saving: boolean; saved: boolean; multiline?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"] }) => <div className="space-y-2"><div className="flex items-center justify-between gap-3"><label className="text-sm font-bold">{configFieldLabels[field]}</label><span className="min-w-14 text-right text-xs font-bold text-muted-foreground">{saving ? <Loader2 className="ml-auto h-4 w-4 animate-spin text-primary" /> : saved ? <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="h-4 w-4" /> salvo</span> : null}</span></div>{multiline ? <Textarea value={value} onChange={(e) => onChange(e.target.value)} onBlur={() => onSave(field)} maxLength={180} className="min-h-24 rounded-2xl text-base" /> : <Input value={value} onChange={(e) => onChange(e.target.value)} onBlur={() => onSave(field)} inputMode={inputMode} className="h-12 rounded-2xl" />}</div>;
 const Cell = ({ label, value }: { label: string; value: string }) => <div><p className="text-xs font-bold uppercase text-muted-foreground">{label}</p><p className="break-words text-sm font-semibold">{value}</p></div>;
 const Empty = () => <div className="grid min-h-40 place-items-center rounded-3xl bg-muted text-center text-muted-foreground"><div><Star className="mx-auto mb-2 h-8 w-8 text-primary" /><p>Nenhum dado ainda.</p></div></div>;
 
