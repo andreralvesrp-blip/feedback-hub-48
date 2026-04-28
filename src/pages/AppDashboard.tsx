@@ -66,7 +66,6 @@ const AppDashboard = () => {
   const [company, setCompany] = useState<Company | null>(null);
   const [responses, setResponses] = useState<ExperienceResponse[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [monthOptions, setMonthOptions] = useState<MonthOption[]>([]);
   const [periodValue, setPeriodValue] = useState<PeriodValue>("current");
   const [currentMonthStart, setCurrentMonthStart] = useState(getCurrentMonthStart);
@@ -75,8 +74,7 @@ const AppDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter" });
-  const [webhookUrl, setWebhookUrl] = useState("");
+  const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "Como foi sua experiência hoje?" });
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
   const panelUrl = company ? `${window.location.origin}/painel/${company.slug}?token=${company.public_panel_token}` : "";
@@ -111,14 +109,12 @@ const AppDashboard = () => {
   const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
     const { start, end } = getMonthRange(monthStart);
-    const [res, bud, hooks] = await Promise.all([
+    const [res, bud] = await Promise.all([
       (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).gte("created_at", start).lte("created_at", end).order("created_at", { ascending: false }).limit(1000),
       (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).gte("created_at", start).lte("created_at", end).order("created_at", { ascending: false }).limit(1000),
-      (supabase as any).from("webhooks").select("*").eq("company_id", companyId).order("created_at", { ascending: false }),
     ]);
     setResponses(res.data ?? []);
     setBudgets(bud.data ?? []);
-    setWebhooks(hooks.data ?? []);
     if (showLoading) setDashboardLoading(false);
   };
 
@@ -145,6 +141,7 @@ const AppDashboard = () => {
         login_email: first?.login_email ?? currentUser.email ?? "",
         alert_phone: first?.alert_phone ?? "",
         plan: first?.plan ?? "starter",
+        initial_review_question: first?.initial_review_question ?? "Como foi sua experiência hoje?",
       });
       if (first) {
         const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: first.id });
