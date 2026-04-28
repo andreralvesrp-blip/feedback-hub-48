@@ -462,6 +462,7 @@ export type Database = {
         }
         Returns: string
       }
+      user_has_any_company: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       access_request_status: "pending" | "approved" | "rejected"
