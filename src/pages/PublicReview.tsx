@@ -205,7 +205,7 @@ const PublicReview = () => {
   if (loading) {
     return (
       <main className="grid min-h-screen place-items-center bg-background px-5">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
       </main>
     );
   }
@@ -259,7 +259,6 @@ const PublicReview = () => {
               </div>
               <div className="space-y-3">
                 {reactionOptions.map((option) => {
-                  const Icon = option.Icon;
                   const selected = experienceRating === option.value;
                   return (
                   <button
@@ -268,7 +267,7 @@ const PublicReview = () => {
                     onClick={() => handleExperience(option.value)}
                     className={`reaction-choice ${option.className} ${selected ? "reaction-choice-selected" : ""}`}
                   >
-                    <Icon className="reaction-icon h-6 w-6" strokeWidth={2.4} fill="currentColor" aria-hidden="true" />
+                    <span className="reaction-icon text-xl" aria-hidden="true">{option.icon}</span>
                     <span>{option.label}</span>
                   </button>
                   );
@@ -279,7 +278,7 @@ const PublicReview = () => {
 
           {step === "private" && (
             <div className="space-y-5">
-              <MessageSquareText className="h-10 w-10 text-primary" />
+              <span className="text-4xl" aria-hidden="true">✍</span>
               <h1 className="text-2xl font-black leading-tight">Obrigado pela sinceridade. O que mais te incomodou e/ou poderia ter sido melhor?</h1>
               <Textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1200} rows={5} placeholder="Queremos te ouvir. Escreva aqui sua sugestão." className="min-h-32 rounded-2xl text-base" />
               <p className="text-sm text-muted-foreground">Fique tranquilo(a). Essa resposta será enviada de forma privada para o dono da empresa como sugestão de melhoria.</p>
@@ -289,19 +288,19 @@ const PublicReview = () => {
 
           {step === "contact" && (
             <div className="space-y-5">
-              <HeartHandshake className="h-10 w-10 text-primary" />
+              <span className="text-4xl" aria-hidden="true">💬</span>
               <h1 className="text-2xl font-black leading-tight">Se preferir, podemos te chamar no WhatsApp para entender melhor sua experiência.</h1>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome (opcional)" className="h-14 rounded-2xl text-base" />
               <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="WhatsApp (opcional)" className="h-14 rounded-2xl text-base" />
               <Button variant="hero" size="touch" className="w-full" onClick={handlePrivateSubmit} disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Enviar feedback
+                {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground" />} Enviar feedback
               </Button>
             </div>
           )}
 
           {step === "thanks" && (
             <div className="space-y-5 text-center">
-              <PartyPopper className="mx-auto h-14 w-14 text-accent" />
+              <span className="block text-5xl" aria-hidden="true">🎉</span>
               <h1 className="text-2xl font-black leading-tight">Ficamos muito felizes que você tenha gostado! 😊</h1>
               <Textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1200} rows={4} placeholder="O que mais você gostou?" className="min-h-28 rounded-2xl text-left text-base" />
               <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("budget")}>Continuar</Button>
@@ -310,12 +309,12 @@ const PublicReview = () => {
 
           {step === "google" && (
             <div className="space-y-5 text-center">
-              <ExternalLink className="h-10 w-10 text-primary" />
+              <span className="block text-4xl" aria-hidden="true">↗</span>
               <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar sua avaliação no Google?</h1>
               <p className="text-sm font-bold text-muted-foreground">Leva menos de 1 minuto.</p>
               <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem com mais confiança.</p>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Avaliar no Google
+                {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground" />} Avaliar no Google
               </Button>
               <Button variant="quiet" size="touch" className="w-full" onClick={() => { setWantsGoogle(false); setStep("done"); }} disabled={submitting}>
                 Agora não
