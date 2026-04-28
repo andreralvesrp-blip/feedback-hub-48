@@ -66,7 +66,7 @@ const Index = () => {
               <div className="rounded-lg bg-card p-4 text-card-foreground shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Hoje</p>
+                    <p className="text-sm text-muted-foreground">Exemplo de visualização</p>
                     <p className="text-2xl font-bold">Experiência 84%</p>
                   </div>
                   <div className="rounded-lg bg-brand-soft p-3 text-primary">
