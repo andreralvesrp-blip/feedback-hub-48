@@ -153,6 +153,8 @@ const PublicReview = () => {
       toast.error(parsed.error.issues[0]?.message || "Confira seus dados.");
       return;
     }
+    const npsId = responseId ?? (await submitNps({ google: false, redirected: false }));
+    if (!npsId) return;
     setSubmitting(true);
     const { error } = await (supabase as any).rpc("submit_budget_request", {
       _company_slug: slug,
@@ -160,7 +162,7 @@ const PublicReview = () => {
       _whatsapp: sanitizePhone(parsed.data.whatsapp),
       _interest: "outro",
       _nps_score: score,
-      _nps_response_id: responseId,
+      _nps_response_id: npsId,
     });
     setSubmitting(false);
     if (error) {
