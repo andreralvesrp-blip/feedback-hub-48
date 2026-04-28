@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ExternalLink, Heart, HeartHandshake, Loader2, MessageSquareText, PartyPopper, Sparkles, ThumbsUp } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -54,9 +53,9 @@ const experienceLabel: Record<ExperienceRating, string> = {
 };
 
 const reactionOptions = [
-  { label: experienceLabel.loved, Icon: Heart, value: "loved" as const, className: "reaction-loved" },
-  { label: experienceLabel.ok, Icon: ThumbsUp, value: "ok" as const, className: "reaction-ok" },
-  { label: experienceLabel.improve, Icon: Sparkles, value: "improve" as const, className: "reaction-improve" },
+  { label: experienceLabel.loved, icon: "❤", value: "loved" as const, className: "reaction-loved" },
+  { label: experienceLabel.ok, icon: "✓", value: "ok" as const, className: "reaction-ok" },
+  { label: experienceLabel.improve, icon: "✦", value: "improve" as const, className: "reaction-improve" },
 ];
 
 const PublicReview = () => {
