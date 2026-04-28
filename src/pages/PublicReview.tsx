@@ -264,7 +264,7 @@ const PublicReview = () => {
               <PartyPopper className="mx-auto h-14 w-14 text-accent" />
               <h1 className="text-2xl font-black leading-tight">Ficamos muito felizes que você tenha gostado! 😊</h1>
               <Textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1200} rows={4} placeholder="O que mais você gostou?" className="min-h-28 rounded-2xl text-left text-base" />
-              <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("google")}>Continuar</Button>
+              <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("budget")}>Continuar</Button>
             </div>
           )}
 
