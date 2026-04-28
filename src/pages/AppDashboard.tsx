@@ -5,7 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -52,11 +52,10 @@ const formatMonthLabel = (monthStart: string) => {
 const getMonthRange = (monthStart: string) => {
   const [year, month] = monthStart.split("-").map(Number);
   const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
-  const end = new Date(year, month, 1, 0, 0, 0, 0);
+  const end = new Date(year, month, 0, 23, 59, 59, 999);
   return { start: start.toISOString(), end: end.toISOString() };
 };
 const getPeriodMonthStart = (period: PeriodValue) => period === "current" ? getCurrentMonthStart() : period;
-const getCurrentPeriodLabel = () => `Mês atual (${formatMonthLabel(getCurrentMonthStart())})`;
 
 const AppDashboard = () => {
   const navigate = useNavigate();
@@ -95,12 +94,17 @@ const AppDashboard = () => {
     };
   }, [responses, budgets]);
 
+  const fixedMonthOptions = useMemo(
+    () => monthOptions.filter((month) => month.month_start !== getCurrentMonthStart()),
+    [monthOptions],
+  );
+
   const loadData = async (companyId: string, monthStart = getPeriodMonthStart(periodValue), showLoading = true) => {
     if (showLoading) setDashboardLoading(true);
     const { start, end } = getMonthRange(monthStart);
     const [res, bud, hooks] = await Promise.all([
-      (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).gte("created_at", start).lt("created_at", end).order("created_at", { ascending: false }).limit(1000),
-      (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).gte("created_at", start).lt("created_at", end).order("created_at", { ascending: false }).limit(1000),
+      (supabase as any).from("experience_responses").select("*").eq("company_id", companyId).gte("created_at", start).lte("created_at", end).order("created_at", { ascending: false }).limit(1000),
+      (supabase as any).from("budget_requests").select("*").eq("company_id", companyId).gte("created_at", start).lte("created_at", end).order("created_at", { ascending: false }).limit(1000),
       (supabase as any).from("webhooks").select("*").eq("company_id", companyId).order("created_at", { ascending: false }),
     ]);
     setResponses(res.data ?? []);
