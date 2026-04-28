@@ -172,23 +172,23 @@ const PublicReview = () => {
 
         <section className="flex flex-1 flex-col justify-center rounded-3xl bg-card p-5 shadow-soft animate-soft-rise">
           {step === "nps" && (
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <h1 className="text-2xl font-black leading-tight">De 0 a 10, o quanto você recomendaria o {company.name} para um familiar ou amigo?</h1>
               </div>
-              <div className="grid grid-cols-6 gap-2">
+              <div className="grid grid-cols-11 gap-1.5">
                 {Array.from({ length: 11 }, (_, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => handleScore(i)}
-                    className="h-12 rounded-xl border border-border bg-surface text-lg font-black shadow-soft transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="aspect-square min-w-0 rounded-lg border border-border bg-surface text-sm font-black text-muted-foreground shadow-soft transition hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-base"
                   >
                     {i}
                   </button>
                 ))}
               </div>
-              <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
+              <div className="flex items-center justify-between text-xs font-bold text-muted-foreground sm:text-sm">
                 <span>Pouco provável</span>
                 <span>Muito provável</span>
               </div>
@@ -222,9 +222,10 @@ const PublicReview = () => {
           )}
 
           {step === "thanks" && (
-            <div className="space-y-6 text-center">
+            <div className="space-y-5 text-center">
               <PartyPopper className="mx-auto h-14 w-14 text-accent" />
               <h1 className="text-2xl font-black leading-tight">Ficamos muito felizes que você tenha gostado! 😊</h1>
+              <Textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1200} rows={4} placeholder="O que mais você gostou?" className="min-h-28 rounded-2xl text-left text-base" />
               <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("google")}>Continuar</Button>
             </div>
           )}
