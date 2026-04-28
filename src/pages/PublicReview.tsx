@@ -292,6 +292,9 @@ const PublicReview = () => {
               <Button variant="warm" size="touch" className="w-full" onClick={submitBudget} disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />} Receber contato
               </Button>
+              <Button variant="quiet" size="touch" className="w-full" onClick={() => setStep("google")} disabled={submitting}>
+                Não tenho interesse
+              </Button>
             </div>
           )}
 
