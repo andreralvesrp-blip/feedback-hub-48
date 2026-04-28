@@ -226,6 +226,11 @@ const AppDashboard = () => {
     navigate("/login", { replace: true });
   };
 
+  const handleMonthChange = async (monthStart: string) => {
+    setSelectedMonth(monthStart);
+    if (company) await loadData(company.id, monthStart);
+  };
+
   if (loading) return <main className="grid min-h-screen place-items-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></main>;
 
   return (
@@ -251,8 +256,8 @@ const AppDashboard = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-5">
-            <div className="flex justify-end"><Select value={period} onValueChange={(v) => setPeriod(v as "month" | "thirty")}><SelectTrigger className="w-48 rounded-2xl"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(periods).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
+            <div className="flex items-center justify-end gap-3"><span className="text-sm font-semibold text-muted-foreground">Período</span><Select value={selectedMonth} onValueChange={handleMonthChange} disabled={!company || dashboardLoading}><SelectTrigger className="w-36 rounded-2xl"><SelectValue placeholder={formatMonthLabel(selectedMonth)} /></SelectTrigger><SelectContent>{monthOptions.map((month) => <SelectItem key={month.month_start} value={month.month_start}>{month.month_label}</SelectItem>)}</SelectContent></Select>{dashboardLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}</div>
+            <div className={`grid gap-3 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-7 ${dashboardLoading ? "opacity-60" : "opacity-100"}`}>
               {[["Índice de Experiência", stats.experienceIndex], ["Respostas", stats.total], ["Adorei", stats.loved], ["Foi ok", stats.ok], ["Não gostei", stats.improve], ["Orçamentos", stats.budgets], ["Google", stats.google]].map(([label, value]) => (
                 <div key={label} className="rounded-3xl bg-card p-4 shadow-soft"><p className="text-sm text-muted-foreground">{label}</p><p className="text-3xl font-black">{value}</p></div>
               ))}
