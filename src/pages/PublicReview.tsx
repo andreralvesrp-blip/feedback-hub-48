@@ -5,7 +5,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,20 +19,10 @@ type PublicCompany = {
   google_reviews_url: string | null;
 };
 
-type Interest = "festa_infantil" | "casamento" | "evento_corporativo" | "servico_para_evento" | "outro";
-
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Informe seu nome").max(120),
   whatsapp: z.string().trim().regex(/^[0-9+()\-\s]{8,32}$/, "Informe um WhatsApp válido"),
 });
-
-const interestLabels: Record<Interest, string> = {
-  festa_infantil: "Festa infantil",
-  casamento: "Casamento",
-  evento_corporativo: "Evento corporativo",
-  servico_para_evento: "Serviço para evento",
-  outro: "Outro",
-};
 
 const sanitizePhone = (value: string) => value.replace(/[^0-9+]/g, "");
 
@@ -49,9 +38,8 @@ const PublicReview = () => {
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [wantsGoogle, setWantsGoogle] = useState(false);
-  const [interest, setInterest] = useState<Interest>("festa_infantil");
 
-  const isHappy = score !== null && score >= 8;
+  const isHappy = score !== null && score >= 9;
   const progress = useMemo(() => {
     const order = isHappy ? ["nps", "thanks", "google", "budget", "done"] : ["nps", "private", "contact", "done"];
     return Math.max(18, ((order.indexOf(step) + 1) / order.length) * 100);
@@ -96,7 +84,7 @@ const PublicReview = () => {
 
   const handleScore = (value: number) => {
     setScore(value);
-    if (value <= 7) {
+    if (value <= 8) {
       setWantsGoogle(false);
       setStep("private");
     } else {
@@ -130,7 +118,7 @@ const PublicReview = () => {
       _company_slug: slug,
       _name: parsed.data.name,
       _whatsapp: sanitizePhone(parsed.data.whatsapp),
-      _interest: interest,
+      _interest: "outro",
       _nps_score: score,
       _nps_response_id: responseId,
     });
