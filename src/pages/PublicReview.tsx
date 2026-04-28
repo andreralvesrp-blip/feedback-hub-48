@@ -240,7 +240,7 @@ const PublicReview = () => {
         </div>
 
         <section className="flex flex-1 flex-col justify-center rounded-3xl bg-card p-5 shadow-soft animate-soft-rise">
-          {step === "nps" && (
+          {step === "experience" && (
             <div className="mx-auto w-full max-w-sm space-y-8 py-4 text-center">
               <div className="space-y-3">
                 <h1 className="text-3xl font-black leading-tight">Como foi sua experiência hoje no Kids Point?</h1>
@@ -248,12 +248,12 @@ const PublicReview = () => {
               <div className="space-y-3">
                 {reactionOptions.map((option) => {
                   const Icon = option.Icon;
-                  const selected = score === option.score;
+                  const selected = experienceRating === option.value;
                   return (
                   <button
                     key={option.label}
                     type="button"
-                    onClick={() => handleScore(option.score)}
+                    onClick={() => handleExperience(option.value)}
                     className={`reaction-choice ${option.className} ${selected ? "reaction-choice-selected" : ""}`}
                   >
                     <Icon className="reaction-icon h-6 w-6" strokeWidth={2.4} fill="currentColor" aria-hidden="true" />
@@ -340,8 +340,8 @@ const PublicReview = () => {
           {step === "done" && (
             <div className="space-y-6 text-center">
               <CheckCircle2 className="mx-auto h-16 w-16 text-success" />
-              <h1 className="text-3xl font-black leading-tight">{isHappy ? "Muito obrigado pela sua avaliação!" : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
-              {!isHappy && company.google_reviews_url && (
+              <h1 className="text-3xl font-black leading-tight">{isLoved ? "Muito obrigado pela sua avaliação!" : "Obrigado pelo feedback. Sua opinião ajuda a empresa a melhorar."}</h1>
+              {!isLoved && company.google_reviews_url && (
                 <div className="space-y-4 text-left">
                   <label className="flex items-start gap-3 rounded-2xl bg-muted p-4 text-sm">
                     <Checkbox checked={wantsGoogle} onCheckedChange={(v) => setWantsGoogle(Boolean(v))} />
@@ -354,7 +354,7 @@ const PublicReview = () => {
                   )}
                 </div>
               )}
-              {isHappy && wantsGoogle && company.google_reviews_url && (
+              {isLoved && wantsGoogle && company.google_reviews_url && (
                 <Button asChild variant="hero" size="touch" className="w-full">
                   <a href={company.google_reviews_url} target="_blank" rel="noreferrer">Avaliar no Google</a>
                 </Button>
