@@ -53,10 +53,10 @@ All colors MUST be HSL.
     --reaction-choice-border: 220 13% 91%;
     --reaction-loved: 142 71% 45%;
     --reaction-loved-soft: 142 76% 97%;
-    --reaction-ok: 38 92% 50%;
-    --reaction-ok-soft: 48 100% 97%;
+    --reaction-ok: 220 9% 46%;
+    --reaction-ok-soft: 220 14% 96%;
     --reaction-improve: 0 84% 60%;
-    --reaction-improve-soft: 0 100% 98%;
+    --reaction-improve-soft: 0 93% 94%;
     --gradient-hero: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
     --gradient-card: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
     --shadow-soft: 0 12px 28px -18px hsl(217 19% 27% / 0.28);
