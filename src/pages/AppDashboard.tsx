@@ -88,7 +88,7 @@ const AppDashboard = () => {
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [savingField, setSavingField] = useState<ConfigField | null>(null);
   const [savedField, setSavedField] = useState<ConfigField | null>(null);
-  const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "Como foi sua experiência hoje?" });
+  const [form, setForm] = useState({ name: "", slug: "", logo_url: "", segment: "Eventos", whatsapp: "", google_reviews_url: "", responsible_name: "", login_email: "", alert_phone: "", plan: "starter", initial_review_question: "" });
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
   const panelUrl = company ? `${window.location.origin}/painel/${company.slug}?token=${company.public_panel_token}` : "";
@@ -155,7 +155,7 @@ const AppDashboard = () => {
         login_email: first?.login_email ?? currentUser.email ?? "",
         alert_phone: first?.alert_phone ?? "",
         plan: first?.plan ?? "starter",
-        initial_review_question: first?.initial_review_question ?? "Como foi sua experiência hoje?",
+        initial_review_question: first?.initial_review_question ?? "",
       });
       if (first) {
         const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: first.id });
@@ -204,7 +204,11 @@ const AppDashboard = () => {
       toast.error(parsed.error.issues[0]?.message || "Confira os campos.");
       return;
     }
-    if (company && value === (company[field] ?? "")) return;
+    if (company && value === (company[field] ?? "")) {
+      setSavedField(field);
+      window.setTimeout(() => setSavedField((current) => current === field ? null : current), 1800);
+      return;
+    }
     setSavingField(field);
     const payload = {
       [field]: field === "google_reviews_url" || field === "alert_phone" ? value || null : value,
