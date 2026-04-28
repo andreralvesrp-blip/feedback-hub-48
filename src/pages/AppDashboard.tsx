@@ -95,6 +95,9 @@ const AppDashboard = () => {
 
   const reviewUrl = `${window.location.origin}/avaliar/${company?.slug || form.slug || "sua-empresa"}`;
   const panelUrl = company ? `${window.location.origin}/painel/${company.slug}?token=${company.public_panel_token}` : "";
+  const activeMembership = memberships.find((item) => item.company_id === company?.id);
+  const isSuperAdmin = memberships.some((item) => item.role === "super_admin");
+  const canManageCompany = activeMembership?.role === "company_admin" || activeMembership?.role === "super_admin" || isSuperAdmin;
 
   const stats = useMemo(() => {
     const total = responses.length;
@@ -246,8 +249,21 @@ const AppDashboard = () => {
   };
 
   const updateBudget = async (id: string, status: string) => {
+    if (!canManageCompany) return toast.error("Você tem acesso somente leitura.");
     await (supabase as any).from("budget_requests").update({ status }).eq("id", id);
     setBudgets((items) => items.map((i) => i.id === id ? { ...i, status } : i));
+  };
+
+  const switchCompany = async (companyId: string) => {
+    const nextCompany = memberships.find((item) => item.company_id === companyId)?.companies ?? null;
+    if (!nextCompany) return;
+    setCompany(nextCompany);
+    setSearchParams({ company: companyId });
+    setForm((current) => ({ ...current, ...nextCompany, google_reviews_url: nextCompany.google_reviews_url ?? "", initial_review_question: nextCompany.initial_review_question ?? "", alert_phone: nextCompany.alert_phone ?? "" }));
+    const { data: months } = await (supabase as any).rpc("get_company_response_months", { _company_id: nextCompany.id });
+    setMonthOptions(months ?? []);
+    setPeriodValue("current");
+    await loadData(nextCompany.id, getCurrentMonthStart());
   };
 
   const copy = async (value: string) => {
@@ -307,12 +323,17 @@ const AppDashboard = () => {
             <p className="text-sm text-muted-foreground">Captura Eventos</p>
             <h1 className="text-xl font-black leading-tight">{company?.name || "Configure sua empresa"}</h1>
           </div>
-          <Button variant="quiet" size="icon" onClick={signOut} aria-label="Sair"><LogOut className="h-4 w-4" /></Button>
+          <div className="flex items-center gap-2">
+            {memberships.length > 1 && <Select value={company?.id} onValueChange={switchCompany}><SelectTrigger className="hidden w-56 rounded-2xl sm:flex"><SelectValue /></SelectTrigger><SelectContent>{memberships.map((item) => item.companies && <SelectItem key={item.company_id} value={item.company_id}>{item.companies.name}</SelectItem>)}</SelectContent></Select>}
+            {isSuperAdmin && <Button asChild variant="quiet"><Link to="/admin">Admin</Link></Button>}
+            <Button variant="quiet" size="icon" onClick={signOut} aria-label="Sair"><LogOut className="h-4 w-4" /></Button>
+          </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-6xl px-4 py-5">
         <Tabs defaultValue={company ? "dashboard" : "settings"} className="space-y-5">
+          {memberships.length > 1 && <Select value={company?.id} onValueChange={switchCompany}><SelectTrigger className="h-12 rounded-2xl sm:hidden"><SelectValue /></SelectTrigger><SelectContent>{memberships.map((item) => item.companies && <SelectItem key={item.company_id} value={item.company_id}>{item.companies.name}</SelectItem>)}</SelectContent></Select>}
           <TabsList className="grid h-auto grid-cols-5 rounded-2xl bg-muted p-1">
             <TabsTrigger value="dashboard" className="rounded-xl"><BarChart3 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Painel</span></TabsTrigger>
             <TabsTrigger value="responses" className="rounded-xl"><Table2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Respostas</span></TabsTrigger>
@@ -344,7 +365,7 @@ const AppDashboard = () => {
           </TabsContent>
 
           <TabsContent value="settings">
-            <section className="mx-auto max-w-2xl rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-black">Configurações</h2><div className="grid gap-4"><InlineConfigField field="name" value={form.name} onChange={(value) => setForm((f) => ({ ...f, name: value }))} onSave={saveCompanyField} saving={savingField === "name"} saved={savedField === "name"} /><InlineConfigField field="alert_phone" value={form.alert_phone} onChange={(value) => setForm((f) => ({ ...f, alert_phone: value }))} onSave={saveCompanyField} saving={savingField === "alert_phone"} saved={savedField === "alert_phone"} inputMode="tel" /><InlineConfigField field="google_reviews_url" value={form.google_reviews_url} onChange={(value) => setForm((f) => ({ ...f, google_reviews_url: value }))} onSave={saveCompanyField} saving={savingField === "google_reviews_url"} saved={savedField === "google_reviews_url"} inputMode="url" /><InlineConfigField field="initial_review_question" value={form.initial_review_question} onChange={(value) => setForm((f) => ({ ...f, initial_review_question: value }))} onSave={saveCompanyField} saving={savingField === "initial_review_question"} saved={savedField === "initial_review_question"} multiline /></div></section>
+            <section className="mx-auto max-w-2xl rounded-3xl bg-card p-5 shadow-soft"><h2 className="mb-5 text-2xl font-black">Configurações</h2><div className="grid gap-4"><InlineConfigField field="name" value={form.name} onChange={(value) => setForm((f) => ({ ...f, name: value }))} onSave={saveCompanyField} saving={savingField === "name"} saved={savedField === "name"} disabled={!canManageCompany} /><InlineConfigField field="alert_phone" value={form.alert_phone} onChange={(value) => setForm((f) => ({ ...f, alert_phone: value }))} onSave={saveCompanyField} saving={savingField === "alert_phone"} saved={savedField === "alert_phone"} inputMode="tel" disabled={!canManageCompany} /><InlineConfigField field="google_reviews_url" value={form.google_reviews_url} onChange={(value) => setForm((f) => ({ ...f, google_reviews_url: value }))} onSave={saveCompanyField} saving={savingField === "google_reviews_url"} saved={savedField === "google_reviews_url"} inputMode="url" disabled={!canManageCompany} /><InlineConfigField field="initial_review_question" value={form.initial_review_question} onChange={(value) => setForm((f) => ({ ...f, initial_review_question: value }))} onSave={saveCompanyField} saving={savingField === "initial_review_question"} saved={savedField === "initial_review_question"} multiline disabled={!canManageCompany} /></div></section>
           </TabsContent>
         </Tabs>
       </div>
