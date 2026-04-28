@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ExternalLink, HeartHandshake, Loader2, MessageSquareText, PartyPopper } from "lucide-react";
+import { CheckCircle2, ExternalLink, Heart, HeartHandshake, Loader2, MessageSquareText, PartyPopper, Sparkles, ThumbsUp } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -45,9 +45,9 @@ const formatPhone = (value: string) => {
 };
 
 const reactionOptions = [
-  { label: "Adorei", icon: "🟢", score: 10, className: "reaction-loved" },
-  { label: "Foi ok", icon: "🟡", score: 8, className: "reaction-ok" },
-  { label: "Pode melhorar", icon: "🔴", score: 6, className: "reaction-improve" },
+  { label: "Adorei", Icon: Heart, score: 10, className: "reaction-loved" },
+  { label: "Foi ok", Icon: ThumbsUp, score: 8, className: "reaction-ok" },
+  { label: "Pode melhorar", Icon: Sparkles, score: 6, className: "reaction-improve" },
 ];
 
 const PublicReview = () => {
@@ -238,17 +238,21 @@ const PublicReview = () => {
                 <h1 className="text-3xl font-black leading-tight">Como foi a experiência de hoje?</h1>
               </div>
               <div className="space-y-3">
-                {reactionOptions.map((option) => (
+                {reactionOptions.map((option) => {
+                  const Icon = option.Icon;
+                  const selected = score === option.score;
+                  return (
                   <button
                     key={option.label}
                     type="button"
                     onClick={() => handleScore(option.score)}
-                    className={`flex min-h-16 w-full items-center justify-center gap-3 rounded-[1.35rem] px-5 text-lg font-bold shadow-soft transition-all duration-150 hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${score === option.score ? "scale-105 bg-primary text-primary-foreground shadow-glow" : option.className}`}
+                    className={`reaction-choice ${option.className} ${selected ? "reaction-choice-selected" : ""}`}
                   >
-                    <span className="text-xl" aria-hidden="true">{option.icon}</span>
+                    <Icon className="reaction-icon h-6 w-6" strokeWidth={2.4} fill="currentColor" aria-hidden="true" />
                     <span>{option.label}</span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -287,7 +291,7 @@ const PublicReview = () => {
           {step === "google" && (
             <div className="space-y-5 text-center">
               <ExternalLink className="h-10 w-10 text-primary" />
-              <h1 className="text-2xl font-black leading-tight">Quer compartilhar sua experiência no Google também?</h1>
+              <h1 className="text-2xl font-black leading-tight">Quer nos ajudar e compartilhar sua avaliação no Google?</h1>
               <p className="text-sm font-bold text-muted-foreground">Leva menos de 1 minuto.</p>
               <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem com mais confiança.</p>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
@@ -303,7 +307,7 @@ const PublicReview = () => {
             <div className="space-y-5 text-center">
               <CheckCircle2 className="mx-auto h-14 w-14 text-success" />
               <h1 className="text-2xl font-black leading-tight">Perfeito! Já recebemos seu contato 😊</h1>
-              <p className="text-base text-muted-foreground">Nossa equipe pode te chamar pelo WhatsApp em breve.</p>
+              <p className="text-base text-muted-foreground">Iremos te chamar pelo WhatsApp em breve</p>
               <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("google")}>
                 Continuar
               </Button>
