@@ -509,7 +509,7 @@ const Index = () => {
           </nav>
 
           <Button asChild variant="warm" size="sm">
-            <Link to="/solicitar-acesso">Testar em um evento</Link>
+            <Link to="/login">Entrar</Link>
           </Button>
         </div>
       </header>
@@ -519,9 +519,6 @@ const Index = () => {
         <div className="absolute left-1/2 top-20 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-brand-soft blur-3xl" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.92fr_1.08fr]">
           <div className="max-w-3xl space-y-8 animate-soft-rise">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold text-primary shadow-sm">
-              <Sparkles className="h-4 w-4" /> Oportunidades invisíveis em cada evento
-            </div>
             <div className="space-y-5">
               <h1 className="text-4xl font-bold leading-[1.04] sm:text-6xl lg:text-7xl">
                 Transforme convidados em novos clientes.
@@ -533,7 +530,7 @@ const Index = () => {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button asChild variant="warm" size="touch">
                 <Link to="/solicitar-acesso">
-                  Quero capturar oportunidades <ArrowRight className="h-5 w-5" />
+                  Testar em um evento <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
               <Button asChild variant="quiet" size="touch">
@@ -542,7 +539,7 @@ const Index = () => {
             </div>
           </div>
 
-          <HeroMockup />
+          <HomeLeadForm />
         </div>
       </section>
 
