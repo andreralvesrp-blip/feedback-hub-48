@@ -17,8 +17,12 @@ import {
   Workflow,
   Zap,
 } from "lucide-react";
+import { type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 type IconType = typeof QrCode;
@@ -165,6 +169,121 @@ const scenarios = [
     text: "Quem gostou da entrega deixa contato para receber proposta sem precisar procurar depois.",
   },
 ];
+
+const onlyDigits = (value: string) => value.replace(/\D/g, "");
+
+const normalizeText = (value: string) => value.trim().replace(/\s+/g, " ");
+
+const formatWhatsapp = (value: string) => {
+  const digits = onlyDigits(value).slice(0, 11);
+
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+};
+
+const isValidBrazilianMobile = (value: string) => {
+  const digits = onlyDigits(value);
+  const validDdds = new Set([
+    "11", "12", "13", "14", "15", "16", "17", "18", "19", "21", "22", "24", "27", "28", "31", "32", "33", "34", "35", "37", "38", "41", "42", "43", "44", "45", "46", "47", "48", "49", "51", "53", "54", "55", "61", "62", "63", "64", "65", "66", "67", "68", "69", "71", "73", "74", "75", "77", "79", "81", "82", "83", "84", "85", "86", "87", "88", "89", "91", "92", "93", "94", "95", "96", "97", "98", "99",
+  ]);
+
+  return digits.length === 11 && validDdds.has(digits.slice(0, 2)) && digits[2] === "9" && !/^(\d)\1{10}$/.test(digits);
+};
+
+const HomeLeadForm = () => {
+  const [leadForm, setLeadForm] = useState({ name: "", companyName: "", whatsapp: "" });
+  const [leadErrors, setLeadErrors] = useState<Record<string, string>>({});
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
+
+  const updateLeadField = (field: keyof typeof leadForm, value: string) => {
+    setLeadForm((current) => ({ ...current, [field]: field === "whatsapp" ? formatWhatsapp(value) : value }));
+    setLeadErrors((current) => ({ ...current, [field]: "" }));
+  };
+
+  const validateLeadForm = () => {
+    const errors: Record<string, string> = {};
+    const name = normalizeText(leadForm.name);
+    const companyName = normalizeText(leadForm.companyName);
+
+    if (name.split(" ").length < 2 || /\d/.test(name)) errors.name = "Informe nome e sobrenome.";
+    if (companyName.length < 2) errors.companyName = "Informe o nome da empresa.";
+    if (!isValidBrazilianMobile(leadForm.whatsapp)) errors.whatsapp = "Informe um WhatsApp válido com DDD.";
+
+    setLeadErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const submitLeadForm = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmittingLead || !validateLeadForm()) return;
+
+    setIsSubmittingLead(true);
+    const { error } = await supabase.from("home_leads").insert({
+      name: normalizeText(leadForm.name),
+      company_name: normalizeText(leadForm.companyName),
+      whatsapp: onlyDigits(leadForm.whatsapp),
+    });
+
+    setIsSubmittingLead(false);
+
+    if (error) {
+      setLeadErrors({ form: "Não foi possível enviar agora. Tente novamente em instantes." });
+      return;
+    }
+
+    setLeadSubmitted(true);
+    setLeadForm({ name: "", companyName: "", whatsapp: "" });
+  };
+
+  if (leadSubmitted) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-8 shadow-soft animate-soft-rise">
+        <div className="mb-5 grid h-12 w-12 place-items-center rounded-lg bg-brand-soft text-primary">
+          <ShieldCheck className="h-6 w-6" />
+        </div>
+        <h2 className="text-2xl font-bold leading-tight">Recebemos seu contato.</h2>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">Em breve vamos falar com você para entender seu evento e tirar suas dúvidas.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={submitLeadForm} className="rounded-lg border border-border bg-card p-6 shadow-soft animate-soft-rise sm:p-8">
+      <div className="mb-6 space-y-2">
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Teste no seu evento</p>
+        <h2 className="text-2xl font-bold leading-tight">Veja como capturar oportunidades na prática.</h2>
+        <p className="text-sm leading-6 text-muted-foreground">Deixe seus dados e receba orientação para usar o QR Code em uma experiência real.</p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="home-lead-name">Nome completo</Label>
+          <Input id="home-lead-name" value={leadForm.name} onChange={(event) => updateLeadField("name", event.target.value)} placeholder="Seu nome e sobrenome" autoComplete="name" />
+          {leadErrors.name && <p className="text-sm font-medium text-destructive">{leadErrors.name}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="home-lead-company">Empresa</Label>
+          <Input id="home-lead-company" value={leadForm.companyName} onChange={(event) => updateLeadField("companyName", event.target.value)} placeholder="Nome da empresa" autoComplete="organization" />
+          {leadErrors.companyName && <p className="text-sm font-medium text-destructive">{leadErrors.companyName}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="home-lead-whatsapp">WhatsApp</Label>
+          <Input id="home-lead-whatsapp" value={leadForm.whatsapp} onChange={(event) => updateLeadField("whatsapp", event.target.value)} placeholder="(00) 00000-0000" inputMode="tel" autoComplete="tel" />
+          {leadErrors.whatsapp && <p className="text-sm font-medium text-destructive">{leadErrors.whatsapp}</p>}
+        </div>
+      </div>
+
+      {leadErrors.form && <p className="mt-4 text-sm font-medium text-destructive">{leadErrors.form}</p>}
+
+      <Button className="mt-6 w-full" variant="warm" size="touch" disabled={isSubmittingLead}>
+        {isSubmittingLead ? "Enviando..." : "Testar em um evento"} <ArrowRight className="h-5 w-5" />
+      </Button>
+    </form>
+  );
+};
 
 const SectionHeader = ({
   eyebrow,
@@ -390,7 +509,7 @@ const Index = () => {
           </nav>
 
           <Button asChild variant="warm" size="sm">
-            <Link to="/solicitar-acesso">Testar em um evento</Link>
+            <Link to="/login">Entrar</Link>
           </Button>
         </div>
       </header>
@@ -400,9 +519,6 @@ const Index = () => {
         <div className="absolute left-1/2 top-20 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-brand-soft blur-3xl" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.92fr_1.08fr]">
           <div className="max-w-3xl space-y-8 animate-soft-rise">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold text-primary shadow-sm">
-              <Sparkles className="h-4 w-4" /> Oportunidades invisíveis em cada evento
-            </div>
             <div className="space-y-5">
               <h1 className="text-4xl font-bold leading-[1.04] sm:text-6xl lg:text-7xl">
                 Transforme convidados em novos clientes.
@@ -414,7 +530,7 @@ const Index = () => {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button asChild variant="warm" size="touch">
                 <Link to="/solicitar-acesso">
-                  Quero capturar oportunidades <ArrowRight className="h-5 w-5" />
+                  Testar em um evento <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
               <Button asChild variant="quiet" size="touch">
@@ -423,7 +539,7 @@ const Index = () => {
             </div>
           </div>
 
-          <HeroMockup />
+          <HomeLeadForm />
         </div>
       </section>
 
