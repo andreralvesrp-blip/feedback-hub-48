@@ -81,7 +81,6 @@ const Index = () => {
             </div>
             <div>
               <p className="text-sm font-bold leading-tight">Captura Eventos</p>
-              <p className="text-xs text-muted-foreground">Eventos, contatos e oportunidades</p>
             </div>
           </Link>
 
@@ -101,10 +100,6 @@ const Index = () => {
       <section className="overflow-hidden px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.02fr_0.98fr]">
           <div className="space-y-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-primary shadow-soft">
-              <Sparkles className="h-4 w-4" />
-              Produto para eventos, reputação e novos contatos
-            </div>
             <div className="space-y-5">
               <h1 className="max-w-4xl text-4xl font-bold leading-[1.05] tracking-normal sm:text-6xl lg:text-7xl">
                 Seus próximos clientes já estão nos seus eventos.
