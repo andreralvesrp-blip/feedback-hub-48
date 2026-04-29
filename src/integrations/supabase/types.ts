@@ -326,6 +326,54 @@ export type Database = {
           },
         ]
       }
+      zapi_message_logs: {
+        Row: {
+          budget_request_id: string
+          company_id: string
+          created_at: string
+          id: string
+          message: string
+          phone_to: string | null
+          response_body: Json | null
+          status: string
+        }
+        Insert: {
+          budget_request_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+          message: string
+          phone_to?: string | null
+          response_body?: Json | null
+          status?: string
+        }
+        Update: {
+          budget_request_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          phone_to?: string | null
+          response_body?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapi_message_logs_budget_request_id_fkey"
+            columns: ["budget_request_id"]
+            isOneToOne: false
+            referencedRelation: "budget_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zapi_message_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -352,6 +400,10 @@ export type Database = {
       can_manage_company: {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
+      }
+      format_zapi_destination_phone: {
+        Args: { _phone: string }
+        Returns: string
       }
       get_access_requests: {
         Args: never
