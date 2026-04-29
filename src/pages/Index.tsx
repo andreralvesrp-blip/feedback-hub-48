@@ -178,24 +178,73 @@ const Index = () => {
       </section>
 
       <section className="bg-background px-5 py-16 sm:px-8 lg:px-10">
-        <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2">
-          {benefits.map((benefit) => (
-            <div key={benefit} className="flex items-start gap-3 rounded-lg border border-border bg-card p-5 shadow-sm">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-              <p className="text-base font-bold leading-6 text-card-foreground">{benefit}</p>
-            </div>
-          ))}
+        <div className="mx-auto max-w-5xl space-y-9">
+          <h2 className="max-w-3xl text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
+            O evento acaba. As oportunidades não.
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {benefits.map((benefit) => (
+              <div key={benefit} className="flex items-start gap-3 rounded-lg border border-border bg-card p-5 shadow-sm">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <p className="text-base font-bold leading-6 text-card-foreground">{benefit}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-surface px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-5xl space-y-7">
+          <div className="max-w-3xl space-y-4">
+            <h2 className="text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
+              Feito para negócios que vivem de eventos e experiências presenciais.
+            </h2>
+            <p className="text-lg leading-8 text-muted-foreground">
+              Ideal para empresas que recebem pessoas, entregam experiências e dependem de indicação, reputação e novos orçamentos.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {audiences.map((audience) => (
+              <div key={audience} className="rounded-lg border border-border bg-card p-4 text-base font-bold text-card-foreground shadow-sm">
+                {audience}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-background px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-5xl space-y-9">
+          <h2 className="max-w-3xl text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
+            Como funciona na prática
+          </h2>
+          <div className="grid gap-4 lg:grid-cols-5">
+            {practicalSteps.map(([title, text], index) => (
+              <div key={title} className="rounded-lg border border-border bg-card p-5 text-card-foreground shadow-sm">
+                <div className="mb-5 grid h-10 w-10 place-items-center rounded-md bg-secondary text-sm font-bold text-primary">
+                  {index + 1}
+                </div>
+                <h3 className="text-base font-bold leading-6">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{text}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="bg-surface px-5 py-16 text-foreground sm:px-8 lg:px-10">
         <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-          <h2 className="max-w-2xl text-3xl font-bold leading-tight tracking-normal sm:text-4xl">
-            Comece a capturar valor dos seus eventos hoje
-          </h2>
+          <div className="max-w-2xl space-y-4">
+            <h2 className="text-3xl font-bold leading-tight tracking-normal sm:text-4xl">
+              Pare de deixar convidados irem embora sem virar oportunidade.
+            </h2>
+            <p className="text-lg leading-8 text-muted-foreground">
+              Comece a capturar contatos, avaliações e pedidos de orçamento nos seus eventos.
+            </p>
+          </div>
           <Button asChild variant="warm" size="touch" className="shrink-0">
             <Link to="/solicitar-acesso">
-              Criar minha empresa <ArrowRight className="h-5 w-5" />
+              Solicitar acesso <ArrowRight className="h-5 w-5" />
             </Link>
           </Button>
         </div>
