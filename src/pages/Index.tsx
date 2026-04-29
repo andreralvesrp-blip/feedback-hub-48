@@ -3,6 +3,18 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
+  const dashboardHighlights = [
+    { icon: MessageCircle, label: "Orçamentos" },
+    { icon: CheckCircle2, label: "Avaliações" },
+    { icon: ShieldCheck, label: "Feedbacks" },
+  ];
+
+  const dashboardEvents = [
+    { icon: MessageCircle, title: "Novo pedido de orçamento", subtitle: "Contato chega no painel e no WhatsApp" },
+    { icon: CheckCircle2, title: "Cliente satisfeito", subtitle: "Pode avaliar sua empresa no Google" },
+    { icon: ShieldCheck, title: "Feedback privado", subtitle: "Problemas chegam direto para a empresa" },
+  ];
+
   const benefits = [
     "Capture contatos de convidados e clientes interessados",
     "Receba novos pedidos de orçamento no WhatsApp",
@@ -94,11 +106,7 @@ const Index = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
-                  {[
-                    [MessageCircle, "Orçamentos"],
-                    [CheckCircle2, "Avaliações"],
-                    [ShieldCheck, "Feedbacks"],
-                  ].map(([Icon, label]) => (
+                  {dashboardHighlights.map(({ icon: Icon, label }) => (
                     <div key={label} className="rounded-lg bg-muted p-3 text-center">
                       <Icon className="mx-auto mb-2 h-5 w-5 text-primary" />
                       <p className="text-xs text-muted-foreground">{label}</p>
@@ -106,18 +114,14 @@ const Index = () => {
                   ))}
                 </div>
                 <div className="mt-4 space-y-3">
-                  {[
-                    [MessageCircle, "Novo pedido de orçamento", "Contato chega no painel e no WhatsApp"],
-                    [CheckCircle2, "Cliente satisfeito", "Pode avaliar sua empresa no Google"],
-                    [ShieldCheck, "Feedback privado", "Problemas chegam direto para a empresa"],
-                  ].map(([Icon, title, subtitle]) => (
-                    <div key={String(title)} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
+                  {dashboardEvents.map(({ icon: Icon, title, subtitle }) => (
+                    <div key={title} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
                       <div className="grid h-10 w-10 place-items-center rounded-lg bg-secondary text-primary">
                         <Icon className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold">{title as string}</p>
-                        <p className="text-xs text-muted-foreground">{subtitle as string}</p>
+                        <p className="text-sm font-bold">{title}</p>
+                        <p className="text-xs text-muted-foreground">{subtitle}</p>
                       </div>
                     </div>
                   ))}
