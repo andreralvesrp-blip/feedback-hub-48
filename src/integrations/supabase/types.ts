@@ -226,6 +226,30 @@ export type Database = {
           },
         ]
       }
+      home_leads: {
+        Row: {
+          company_name: string
+          created_at: string
+          id: string
+          name: string
+          whatsapp: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          id?: string
+          name: string
+          whatsapp: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          id?: string
+          name?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

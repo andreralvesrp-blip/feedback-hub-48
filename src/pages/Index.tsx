@@ -7,20 +7,116 @@ import {
   LayoutDashboard,
   MessageCircle,
   QrCode,
-  ShieldCheck,
   Sparkles,
   Star,
   Users,
 } from "lucide-react";
+import { type FormEvent, type MouseEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+
+type LeadForm = {
+  name: string;
+  companyName: string;
+  whatsapp: string;
+};
+
+type LeadFormErrors = Partial<Record<keyof LeadForm, string>>;
+
+const onlyDigits = (value: string) => value.replace(/\D/g, "");
+
+const normalizeText = (value: string) => value.trim().replace(/\s+/g, " ");
+
+const formatWhatsapp = (value: string) => {
+  const digits = onlyDigits(value).slice(0, 11);
+  const ddd = digits.slice(0, 2);
+  const firstPart = digits.slice(2, 7);
+  const secondPart = digits.slice(7, 11);
+
+  if (digits.length <= 2) return ddd ? `(${ddd}` : "";
+  if (digits.length <= 7) return `(${ddd}) ${firstPart}`;
+  return `(${ddd}) ${firstPart}-${secondPart}`;
+};
+
+const isValidFullName = (name: string) => {
+  const cleanName = normalizeText(name);
+  return /^[A-Za-zÀ-ÖØ-öø-ÿ'-]{2,}( [A-Za-zÀ-ÖØ-öø-ÿ'-]{2,})+$/.test(cleanName);
+};
+
+const isValidBrazilianMobile = (value: string) => {
+  const digits = onlyDigits(value);
+  const ddd = Number(digits.slice(0, 2));
+  const lastEight = digits.slice(3);
+  const lastNine = digits.slice(2);
+
+  return (
+    digits.length === 11 &&
+    ddd >= 11 &&
+    ddd <= 99 &&
+    digits[2] === "9" &&
+    !/^(\d)\1{10}$/.test(digits) &&
+    !/^(\d)\1{7}$/.test(lastEight) &&
+    !/^(\d)\1{8}$/.test(lastNine)
+  );
+};
 
 const Index = () => {
-  const flowCards = [
-    { icon: MessageCircle, title: "Novo pedido de orçamento", text: "Contato recebido no WhatsApp" },
-    { icon: Star, title: "Avaliação no Google", text: "Cliente satisfeito direcionado" },
-    { icon: ShieldCheck, title: "Feedback privado", text: "Sugestão enviada para a empresa" },
-  ];
+  const [leadForm, setLeadForm] = useState<LeadForm>({ name: "", companyName: "", whatsapp: "" });
+  const [leadErrors, setLeadErrors] = useState<LeadFormErrors>({});
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
+
+  const validateLeadForm = () => {
+    const errors: LeadFormErrors = {};
+    const cleanCompanyName = normalizeText(leadForm.companyName);
+
+    if (!isValidFullName(leadForm.name)) {
+      errors.name = "Informe nome e sobrenome.";
+    }
+
+    if (cleanCompanyName.length < 3) {
+      errors.companyName = "Informe o nome da empresa.";
+    }
+
+    if (!isValidBrazilianMobile(leadForm.whatsapp)) {
+      errors.whatsapp = "Informe um WhatsApp válido.";
+    }
+
+    setLeadErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleLeadSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (isSubmittingLead || !validateLeadForm()) return;
+
+    setIsSubmittingLead(true);
+
+    const { error } = await supabase.from("home_leads" as never).insert({
+      name: normalizeText(leadForm.name),
+      company_name: normalizeText(leadForm.companyName),
+      whatsapp: onlyDigits(leadForm.whatsapp),
+    } as never);
+
+    setIsSubmittingLead(false);
+
+    if (error) {
+      setLeadErrors({ whatsapp: "Não foi possível enviar agora. Tente novamente." });
+      return;
+    }
+
+    setLeadForm({ name: "", companyName: "", whatsapp: "" });
+    setLeadSubmitted(true);
+  };
+
+  const scrollToLeadForm = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    document.getElementById("tirar-duvidas")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const problemCards = [
     ["Sem contato", "Pessoas interessadas vão embora sem deixar nome ou WhatsApp."],
@@ -88,6 +184,7 @@ const Index = () => {
             <a className="transition-colors hover:text-foreground" href="#produto">Produto</a>
             <a className="transition-colors hover:text-foreground" href="#como-funciona">Como funciona</a>
             <a className="transition-colors hover:text-foreground" href="#para-quem">Para quem é</a>
+            <a className="transition-colors hover:text-foreground" href="#tirar-duvidas" onClick={scrollToLeadForm}>Tire dúvidas</a>
           </nav>
 
           <Button asChild variant="quiet" size="sm">
@@ -104,7 +201,7 @@ const Index = () => {
                 Transforme convidados em <span className="block">novos clientes</span>
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl sm:leading-9">
-                Nossa plataforma te ajuda a gerar orçamentos, aumentar avaliações no Google e ter feedbacks para melhoria.
+                Gere orçamentos e aumente suas avaliações no Google durante os eventos com a nossa plataforma.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -119,32 +216,72 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="relative">
+          <div id="tirar-duvidas" className="relative scroll-mt-28">
             <div className="absolute inset-x-8 -top-8 h-24 rounded-full bg-brand-soft blur-3xl" />
             <div className="relative rounded-lg border border-border bg-card p-4 shadow-soft">
-              <div className="rounded-lg border border-border bg-background p-5">
-                <div className="mb-5 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-muted-foreground">Exemplo de fluxo</p>
-                    <p className="mt-1 text-2xl font-bold">Evento em andamento</p>
-                  </div>
-                  <div className="grid h-11 w-11 place-items-center rounded-lg bg-brand-soft text-primary">
-                    <QrCode className="h-5 w-5" />
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {flowCards.map(({ icon: Icon, title, text }) => (
-                    <div key={title} className="flex items-center gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-                      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-secondary text-primary">
-                        <Icon className="h-5 w-5" />
+              <div className="rounded-lg border border-border bg-background p-5 sm:p-6">
+                {leadSubmitted ? (
+                  <div className="grid min-h-[25rem] place-items-center text-center">
+                    <div className="max-w-sm space-y-4">
+                      <div className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-brand-soft text-primary">
+                        <CheckCircle2 className="h-6 w-6" />
                       </div>
-                      <div>
-                        <p className="text-sm font-bold leading-6">{title}</p>
-                        <p className="text-sm text-muted-foreground">{text}</p>
+                      <h2 className="text-2xl font-bold leading-tight">Recebemos seus dados.</h2>
+                      <p className="text-base leading-7 text-muted-foreground">
+                        Em breve vamos chamar você no WhatsApp.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <form className="space-y-5" onSubmit={handleLeadSubmit} noValidate>
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-bold leading-tight">Quer tirar dúvidas?</h2>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        Deixe seus dados e a gente chama você no WhatsApp.
+                      </p>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="home-lead-name">Nome</Label>
+                        <Input
+                          id="home-lead-name"
+                          value={leadForm.name}
+                          onChange={(event) => setLeadForm((current) => ({ ...current, name: event.target.value }))}
+                          aria-invalid={Boolean(leadErrors.name)}
+                          autoComplete="name"
+                        />
+                        {leadErrors.name && <p className="text-sm font-medium text-destructive">{leadErrors.name}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="home-lead-company">Empresa</Label>
+                        <Input
+                          id="home-lead-company"
+                          value={leadForm.companyName}
+                          onChange={(event) => setLeadForm((current) => ({ ...current, companyName: event.target.value }))}
+                          aria-invalid={Boolean(leadErrors.companyName)}
+                          autoComplete="organization"
+                        />
+                        {leadErrors.companyName && <p className="text-sm font-medium text-destructive">{leadErrors.companyName}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="home-lead-whatsapp">WhatsApp</Label>
+                        <Input
+                          id="home-lead-whatsapp"
+                          inputMode="numeric"
+                          value={leadForm.whatsapp}
+                          onChange={(event) => setLeadForm((current) => ({ ...current, whatsapp: formatWhatsapp(event.target.value) }))}
+                          placeholder="(00) 00000-0000"
+                          aria-invalid={Boolean(leadErrors.whatsapp)}
+                          autoComplete="tel"
+                        />
+                        {leadErrors.whatsapp && <p className="text-sm font-medium text-destructive">{leadErrors.whatsapp}</p>}
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <Button className="w-full" variant="warm" size="touch" type="submit" disabled={isSubmittingLead}>
+                      {isSubmittingLead ? "Enviando..." : "Tirar dúvidas"}
+                    </Button>
+                  </form>
+                )}
               </div>
             </div>
           </div>
