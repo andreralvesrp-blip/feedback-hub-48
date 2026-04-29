@@ -11,42 +11,15 @@ const Index = () => {
 
   const dashboardEvents = [
     { icon: MessageCircle, title: "Novo pedido de orçamento", subtitle: "Contato chega no painel e no WhatsApp" },
-    { icon: CheckCircle2, title: "Cliente satisfeito", subtitle: "Pode avaliar sua empresa no Google" },
+    { icon: CheckCircle2, title: "Avaliação no Google", subtitle: "Cliente satisfeito segue para avaliar" },
     { icon: ShieldCheck, title: "Feedback privado", subtitle: "Problemas chegam direto para a empresa" },
   ];
 
-  const benefits = [
-    "Capture contatos de convidados e clientes interessados",
-    "Receba novos pedidos de orçamento no WhatsApp",
-    "Aumente suas avaliações no Google",
-    "Ouça feedbacks privados antes que virem reclamações públicas",
-    "Veja tudo em um painel simples por empresa",
-    "Aproveite melhor cada evento sem depender só de anúncios ou Instagram",
-  ];
-
-  const solutionSteps = [
-    ["O convidado escaneia o QR Code", "Em poucos segundos, ele avalia como foi a experiência."],
-    ["Quem gostou pode avaliar no Google", "Clientes satisfeitos são direcionados para sua página de avaliação."],
-    ["Quem quer falar com a empresa deixa contato", "Nome e WhatsApp chegam organizados no painel."],
-    ["O dono recebe o pedido no WhatsApp", "Quando entra um novo orçamento, a empresa é avisada na hora."],
-  ];
-
-  const audiences = [
-    "Buffets infantis",
-    "Espaços de festa",
-    "Casas de evento",
-    "Fornecedores de casamento",
-    "Fotógrafos, recreadores e decoradores",
-    "Carrinhos gourmet e ativações",
-    "Eventos corporativos",
-  ];
-
-  const practicalSteps = [
-    ["Você configura sua empresa", "Adiciona nome, telefone para receber orçamentos, link de avaliação do Google e pergunta inicial."],
-    ["A plataforma gera um QR Code", "Você imprime ou exibe o QR Code no evento."],
-    ["O convidado responde em segundos", "Ele escolhe entre “Adorei”, “Foi ok” ou “Não gostei”."],
-    ["A plataforma direciona cada resposta", "Quem gostou pode ir para o Google. Quem quer contato vira orçamento. Quem teve problema envia feedback privado."],
-    ["Você acompanha tudo no painel", "Respostas, orçamentos, avaliações e dados ficam organizados por empresa."],
+  const flowSteps = [
+    ["QR Code no evento", "O convidado escaneia e responde em poucos segundos."],
+    ["Contato capturado", "Quem quer orçamento deixa nome e WhatsApp."],
+    ["Alerta no WhatsApp", "O dono recebe cada novo pedido na hora."],
+    ["Google e feedback", "Clientes satisfeitos vão para o Google. Feedbacks sensíveis ficam privados."],
   ];
 
   return (
