@@ -88,7 +88,6 @@ const Index = () => {
             <a className="transition-colors hover:text-foreground" href="#produto">Produto</a>
             <a className="transition-colors hover:text-foreground" href="#como-funciona">Como funciona</a>
             <a className="transition-colors hover:text-foreground" href="#para-quem">Para quem é</a>
-            <Link className="transition-colors hover:text-foreground" to="/login">Entrar</Link>
           </nav>
 
           <Button asChild variant="quiet" size="sm">
@@ -102,10 +101,10 @@ const Index = () => {
           <div className="space-y-7">
             <div className="space-y-5">
               <h1 className="max-w-4xl text-4xl font-bold leading-[1.05] tracking-normal sm:text-6xl lg:text-7xl">
-                Seus próximos clientes já estão nos seus eventos.
+                Transforme convidados em <span className="block">novos clientes</span>
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl sm:leading-9">
-                A cada evento, pessoas conhecem sua entrega ao vivo. A plataforma ajuda você a capturar contatos, avaliações no Google e feedbacks antes que essa oportunidade se perca.
+                Nossa plataforma te ajuda a gerar orçamentos, aumentar avaliações no Google e ter feedbacks para melhoria.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
