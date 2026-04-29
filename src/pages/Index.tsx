@@ -7,20 +7,111 @@ import {
   LayoutDashboard,
   MessageCircle,
   QrCode,
-  ShieldCheck,
   Sparkles,
   Star,
   Users,
 } from "lucide-react";
+import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+
+type LeadForm = {
+  name: string;
+  companyName: string;
+  whatsapp: string;
+};
+
+type LeadFormErrors = Partial<Record<keyof LeadForm, string>>;
+
+const onlyDigits = (value: string) => value.replace(/\D/g, "");
+
+const normalizeText = (value: string) => value.trim().replace(/\s+/g, " ");
+
+const formatWhatsapp = (value: string) => {
+  const digits = onlyDigits(value).slice(0, 11);
+  const ddd = digits.slice(0, 2);
+  const firstPart = digits.slice(2, 7);
+  const secondPart = digits.slice(7, 11);
+
+  if (digits.length <= 2) return ddd ? `(${ddd}` : "";
+  if (digits.length <= 7) return `(${ddd}) ${firstPart}`;
+  return `(${ddd}) ${firstPart}-${secondPart}`;
+};
+
+const isValidFullName = (name: string) => {
+  const cleanName = normalizeText(name);
+  return /^[A-Za-zÀ-ÖØ-öø-ÿ'-]{2,}( [A-Za-zÀ-ÖØ-öø-ÿ'-]{2,})+$/.test(cleanName);
+};
+
+const isValidBrazilianMobile = (value: string) => {
+  const digits = onlyDigits(value);
+  const ddd = Number(digits.slice(0, 2));
+  const lastEight = digits.slice(3);
+  const lastNine = digits.slice(2);
+
+  return (
+    digits.length === 11 &&
+    ddd >= 11 &&
+    ddd <= 99 &&
+    digits[2] === "9" &&
+    !/^(\d)\1{10}$/.test(digits) &&
+    !/^(\d)\1{7}$/.test(lastEight) &&
+    !/^(\d)\1{8}$/.test(lastNine)
+  );
+};
 
 const Index = () => {
-  const flowCards = [
-    { icon: MessageCircle, title: "Novo pedido de orçamento", text: "Contato recebido no WhatsApp" },
-    { icon: Star, title: "Avaliação no Google", text: "Cliente satisfeito direcionado" },
-    { icon: ShieldCheck, title: "Feedback privado", text: "Sugestão enviada para a empresa" },
-  ];
+  const [leadForm, setLeadForm] = useState<LeadForm>({ name: "", companyName: "", whatsapp: "" });
+  const [leadErrors, setLeadErrors] = useState<LeadFormErrors>({});
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
+
+  const validateLeadForm = () => {
+    const errors: LeadFormErrors = {};
+    const cleanCompanyName = normalizeText(leadForm.companyName);
+
+    if (!isValidFullName(leadForm.name)) {
+      errors.name = "Informe nome e sobrenome.";
+    }
+
+    if (cleanCompanyName.length < 3) {
+      errors.companyName = "Informe o nome da empresa.";
+    }
+
+    if (!isValidBrazilianMobile(leadForm.whatsapp)) {
+      errors.whatsapp = "Informe um WhatsApp válido.";
+    }
+
+    setLeadErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleLeadSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (isSubmittingLead || !validateLeadForm()) return;
+
+    setIsSubmittingLead(true);
+
+    const { error } = await supabase.from("home_leads" as never).insert({
+      name: normalizeText(leadForm.name),
+      company_name: normalizeText(leadForm.companyName),
+      whatsapp: onlyDigits(leadForm.whatsapp),
+    } as never);
+
+    setIsSubmittingLead(false);
+
+    if (error) {
+      setLeadErrors({ whatsapp: "Não foi possível enviar agora. Tente novamente." });
+      return;
+    }
+
+    setLeadForm({ name: "", companyName: "", whatsapp: "" });
+    setLeadSubmitted(true);
+  };
 
   const problemCards = [
     ["Sem contato", "Pessoas interessadas vão embora sem deixar nome ou WhatsApp."],
