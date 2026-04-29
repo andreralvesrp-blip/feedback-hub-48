@@ -17,7 +17,7 @@ import {
   Workflow,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -216,7 +216,7 @@ const HomeLeadForm = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const submitLeadForm = async (event: React.FormEvent<HTMLFormElement>) => {
+  const submitLeadForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmittingLead || !validateLeadForm()) return;
 
