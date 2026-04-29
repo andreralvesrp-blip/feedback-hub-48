@@ -3,18 +3,38 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const steps = [
-    "Cliente escaneia o QR Code",
-    "Responde em menos de 60 segundos",
-    "Quem gostou vai para o Google",
-    "Quem quer orçamento deixa contato",
+  const benefits = [
+    "Capture contatos de convidados e clientes interessados",
+    "Receba novos pedidos de orçamento no WhatsApp",
+    "Aumente suas avaliações no Google",
+    "Ouça feedbacks privados antes que virem reclamações públicas",
+    "Veja tudo em um painel simples por empresa",
+    "Aproveite melhor cada evento sem depender só de anúncios ou Instagram",
   ];
 
-  const benefits = [
-    "Mais avaliações no Google automaticamente",
-    "Mais pedidos de orçamento sem esforço",
-    "Feedback real dos clientes",
-    "Tudo organizado em um painel simples",
+  const solutionSteps = [
+    ["O convidado escaneia o QR Code", "Em poucos segundos, ele avalia como foi a experiência."],
+    ["Quem gostou pode avaliar no Google", "Clientes satisfeitos são direcionados para sua página de avaliação."],
+    ["Quem quer falar com a empresa deixa contato", "Nome e WhatsApp chegam organizados no painel."],
+    ["O dono recebe o pedido no WhatsApp", "Quando entra um novo orçamento, a empresa é avisada na hora."],
+  ];
+
+  const audiences = [
+    "Buffets infantis",
+    "Espaços de festa",
+    "Casas de evento",
+    "Fornecedores de casamento",
+    "Fotógrafos, recreadores e decoradores",
+    "Carrinhos gourmet e ativações",
+    "Eventos corporativos",
+  ];
+
+  const practicalSteps = [
+    ["Você configura sua empresa", "Adiciona nome, telefone para receber orçamentos, link de avaliação do Google e pergunta inicial."],
+    ["A plataforma gera um QR Code", "Você imprime ou exibe o QR Code no evento."],
+    ["O convidado responde em segundos", "Ele escolhe entre “Adorei”, “Foi ok” ou “Não gostei”."],
+    ["A plataforma direciona cada resposta", "Quem gostou pode ir para o Google. Quem quer contato vira orçamento. Quem teve problema envia feedback privado."],
+    ["Você acompanha tudo no painel", "Respostas, orçamentos, avaliações e dados ficam organizados por empresa."],
   ];
 
   return (
@@ -28,7 +48,7 @@ const Index = () => {
               </div>
               <div>
                 <p className="text-sm font-semibold leading-tight">Captura Eventos</p>
-                <p className="text-xs text-muted-foreground">Experiência, Google e orçamentos</p>
+                <p className="text-xs text-muted-foreground">Eventos, contatos e oportunidades</p>
               </div>
             </div>
             <Button asChild variant="quiet" size="sm">
@@ -40,20 +60,20 @@ const Index = () => {
             <div className="animate-soft-rise space-y-7">
               <div className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-medium text-primary">
                 <Sparkles className="h-4 w-4" />
-                QR Code para eventos e empresas locais
+                QR Code para eventos, avaliações e novos orçamentos
               </div>
               <div className="space-y-5">
                 <h1 className="max-w-3xl text-4xl font-bold leading-[1.08] tracking-normal sm:text-6xl">
-                  Transforme convidados em avaliações no Google e novos clientes.
+                  Transforme convidados em novos pedidos de orçamento.
                 </h1>
                 <p className="max-w-xl text-lg leading-8 text-muted-foreground">
-                  Capture feedback em segundos via QR Code no evento e gere mais avaliações e pedidos de orçamento automaticamente.
+                  Com um QR Code no evento, você captura contatos de pessoas que já viveram sua experiência, recebe alertas no WhatsApp e ainda direciona clientes satisfeitos para avaliar sua empresa no Google.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild variant="warm" size="touch">
                   <Link to="/solicitar-acesso">
-                    Começar agora <ArrowRight className="h-5 w-5" />
+                    Solicitar acesso <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
                 <Button asChild variant="quiet" size="touch">
@@ -66,8 +86,8 @@ const Index = () => {
               <div className="rounded-lg bg-card p-4 text-card-foreground shadow-soft">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Exemplo de visualização</p>
-                    <p className="text-2xl font-bold">Experiência 84%</p>
+                    <p className="text-sm text-muted-foreground">Exemplo de painel</p>
+                    <p className="text-2xl font-bold">Evento em andamento</p>
                   </div>
                   <div className="rounded-lg bg-brand-soft p-3 text-primary">
                     <BarChart3 className="h-6 w-6" />
@@ -75,21 +95,21 @@ const Index = () => {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    ["128", "respostas"],
-                    ["41", "orçamentos"],
-                    ["73", "Google"],
-                  ].map(([value, label]) => (
+                    [MessageCircle, "Orçamentos"],
+                    [CheckCircle2, "Avaliações"],
+                    [ShieldCheck, "Feedbacks"],
+                  ].map(([Icon, label]) => (
                     <div key={label} className="rounded-lg bg-muted p-3 text-center">
-                      <p className="text-xl font-bold">{value}</p>
+                      <Icon className="mx-auto mb-2 h-5 w-5 text-primary" />
                       <p className="text-xs text-muted-foreground">{label}</p>
                     </div>
                   ))}
                 </div>
                 <div className="mt-4 space-y-3">
                   {[
-                    [CheckCircle2, "Cliente feliz", "Redirecionado para avaliar no Google"],
-                    [MessageCircle, "Novo orçamento", "Casamento · chamar no WhatsApp"],
-                    [ShieldCheck, "Feedback privado", "Sugestão enviada só para a empresa"],
+                    [MessageCircle, "Novo pedido de orçamento", "Contato chega no painel e no WhatsApp"],
+                    [CheckCircle2, "Cliente satisfeito", "Pode avaliar sua empresa no Google"],
+                    [ShieldCheck, "Feedback privado", "Problemas chegam direto para a empresa"],
                   ].map(([Icon, title, subtitle]) => (
                     <div key={String(title)} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
                       <div className="grid h-10 w-10 place-items-center rounded-lg bg-secondary text-primary">
