@@ -135,11 +135,25 @@ const Index = () => {
       <section className="bg-background px-5 py-16 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-5xl space-y-5">
           <h2 className="max-w-3xl text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
-            Cada evento gera dezenas de oportunidades — e você perde todas.
+            Seu evento já atrai potenciais clientes. O problema é que eles vão embora sem deixar contato.
           </h2>
           <div className="max-w-2xl space-y-4 text-lg leading-8 text-muted-foreground">
-            <p>A cada evento, dezenas de pessoas passam pela sua empresa.</p>
-            <p>Elas vão embora sem deixar avaliação, sem virar contato e sem gerar novos negócios.</p>
+            <p>Em toda festa, casamento, confraternização ou evento corporativo, dezenas de pessoas conhecem sua entrega ao vivo.</p>
+            <p>Elas veem o espaço, o atendimento, a comida, a organização e a experiência acontecendo.</p>
+            <p>Mas, na maioria das vezes, vão embora sem pedir orçamento, sem avaliar no Google e sem virar uma oportunidade comercial.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-surface px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-5xl space-y-5">
+          <h2 className="max-w-3xl text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
+            Antes de gastar mais para atrair gente nova, capture melhor quem já está no seu evento.
+          </h2>
+          <div className="max-w-2xl space-y-4 text-lg leading-8 text-muted-foreground">
+            <p>Anúncios, vídeos e postagens continuam importantes. Mas eles não deveriam ser a única forma de gerar novos clientes.</p>
+            <p>Cada evento já reúne pessoas qualificadas, próximas da sua marca e com alta chance de indicar ou contratar no futuro.</p>
+            <p>A diferença é conseguir capturar esse momento.</p>
           </div>
         </div>
       </section>
@@ -147,15 +161,16 @@ const Index = () => {
       <section id="como-funciona" className="bg-surface px-5 py-16 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-5xl space-y-9">
           <h2 className="max-w-3xl text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
-            Simples: um QR Code no evento resolve isso.
+            Um QR Code no evento. Três resultados para o seu negócio.
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map((step, index) => (
-              <div key={step} className="rounded-lg border border-border bg-card p-5 text-card-foreground shadow-sm">
+            {solutionSteps.map(([title, text], index) => (
+              <div key={title} className="rounded-lg border border-border bg-card p-5 text-card-foreground shadow-sm">
                 <div className="mb-5 grid h-10 w-10 place-items-center rounded-md bg-secondary text-sm font-bold text-primary">
                   {index + 1}
                 </div>
-                <p className="text-base font-bold leading-6">{step}</p>
+                <h3 className="text-base font-bold leading-6">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{text}</p>
               </div>
             ))}
           </div>
