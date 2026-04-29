@@ -157,10 +157,13 @@ const Index = () => {
         <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
           <div className="max-w-2xl space-y-4">
             <h2 className="text-3xl font-bold leading-tight tracking-normal sm:text-4xl">
-              Pare de deixar convidados irem embora sem virar oportunidade.
+              O evento acaba. As oportunidades não.
             </h2>
             <p className="text-lg leading-8 text-muted-foreground">
-              Comece a capturar contatos, avaliações e pedidos de orçamento nos seus eventos.
+              Capture contatos, avaliações e pedidos de orçamento nos seus eventos — sem depender só de anúncios ou Instagram.
+            </p>
+            <p className="text-sm font-semibold leading-6 text-foreground">
+              Ideal para buffets, espaços de festa, casas de evento, fornecedores, carrinhos gourmet e eventos corporativos.
             </p>
           </div>
           <Button asChild variant="warm" size="touch" className="shrink-0">
