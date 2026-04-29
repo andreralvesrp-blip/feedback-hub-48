@@ -113,6 +113,11 @@ const Index = () => {
     setLeadSubmitted(true);
   };
 
+  const scrollToLeadForm = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    document.getElementById("tirar-duvidas")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const problemCards = [
     ["Sem contato", "Pessoas interessadas vão embora sem deixar nome ou WhatsApp."],
     ["Sem avaliação", "Clientes satisfeitos não são direcionados para o Google no momento certo."],
@@ -179,7 +184,7 @@ const Index = () => {
             <a className="transition-colors hover:text-foreground" href="#produto">Produto</a>
             <a className="transition-colors hover:text-foreground" href="#como-funciona">Como funciona</a>
             <a className="transition-colors hover:text-foreground" href="#para-quem">Para quem é</a>
-            <a className="transition-colors hover:text-foreground" href="#tirar-duvidas">Tire dúvidas</a>
+            <a className="transition-colors hover:text-foreground" href="#tirar-duvidas" onClick={scrollToLeadForm}>Tire dúvidas</a>
           </nav>
 
           <Button asChild variant="quiet" size="sm">
