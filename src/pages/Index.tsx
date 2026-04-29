@@ -11,7 +11,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { type FormEvent, type MouseEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,7 +113,7 @@ const Index = () => {
     setLeadSubmitted(true);
   };
 
-  const scrollToLeadForm = (event: React.MouseEvent<HTMLAnchorElement>) => {
+  const scrollToLeadForm = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     document.getElementById("tirar-duvidas")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
