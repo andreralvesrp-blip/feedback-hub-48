@@ -309,9 +309,8 @@ const PublicReview = () => {
           {step === "google" && (
             <div className="space-y-5 text-center">
               <span className="block text-4xl" aria-hidden="true">↗</span>
-              <h1 className="text-2xl font-bold leading-tight">Quer nos ajudar e compartilhar sua avaliação no Google?</h1>
+              <h1 className="text-2xl font-bold leading-tight">Quer ajudar outras pessoas a escolherem com mais confiança no Google?</h1>
               <p className="text-sm font-bold text-muted-foreground">Leva menos de 1 minuto.</p>
-              <p className="text-sm text-muted-foreground">Sua avaliação ajuda outras pessoas a escolherem com mais confiança.</p>
               <Button variant="hero" size="touch" className="w-full" onClick={handleGoogleContinue} disabled={submitting}>
                 {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground" />} Avaliar no Google
               </Button>
