@@ -333,16 +333,24 @@ const PublicReview = () => {
 
           {step === "budget" && (
             <div className="space-y-5">
-              <p className="font-bold text-primary">Se você também estiver planejando um evento, podemos te ajudar 😊</p>
-              <h1 className="text-2xl font-bold leading-tight">Quer receber nosso contato?</h1>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="h-14 rounded-lg text-base" />
-              <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="WhatsApp com DDD" className="h-14 rounded-lg text-base" />
-              <Button variant="warm" size="touch" className="w-full rounded-lg shadow-none" onClick={submitBudget} disabled={submitting}>
-                {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-foreground/40 border-t-accent-foreground" />} Receber contato
-              </Button>
-              <Button variant="quiet" size="touch" className="w-full rounded-lg shadow-none" onClick={() => setStep("google")} disabled={submitting}>
-                Não tenho interesse
-              </Button>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Está planejando um evento e quer falar com a nossa equipe?</p>
+                <h1 className="text-2xl font-bold leading-tight text-foreground">Receba nosso contato para orçamento</h1>
+                <p className="text-sm text-muted-foreground">Preencha apenas se você quiser que nossa equipe entre em contato para entender seu evento e enviar informações ou orçamento.</p>
+              </div>
+              <div className="space-y-3">
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" className="h-14 rounded-lg text-base" />
+                <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="Seu WhatsApp com DDD" className="h-14 rounded-lg text-base" />
+                <p className="text-xs text-muted-foreground">Usaremos esses dados apenas para entrar em contato sobre seu evento.</p>
+              </div>
+              <div className="space-y-2">
+                <Button variant="hero" size="touch" className="w-full rounded-lg" onClick={submitBudget} disabled={submitting}>
+                  {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground" />} Quero receber contato e orçamento
+                </Button>
+                <Button variant="quiet" size="touch" className="w-full rounded-lg shadow-none" onClick={() => setStep("google")} disabled={submitting}>
+                  Não estou planejando evento
+                </Button>
+              </div>
             </div>
           )}
 
