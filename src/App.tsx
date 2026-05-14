@@ -7,6 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 const AppDashboard = lazy(() => import("./pages/AppDashboard.tsx"));
 const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
+const AdminCompanies = lazy(() => import("./pages/AdminCompanies.tsx"));
+const AdminCompanyDetail = lazy(() => import("./pages/AdminCompanyDetail.tsx"));
 const AuthPage = lazy(() => import("./pages/AuthPage.tsx"));
 const Index = lazy(() => import("./pages/Index.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
