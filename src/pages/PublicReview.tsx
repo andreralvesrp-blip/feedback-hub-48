@@ -334,14 +334,12 @@ const PublicReview = () => {
           {step === "budget" && (
             <div className="space-y-5">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Está planejando um evento e quer falar com a nossa equipe?</p>
                 <h1 className="text-2xl font-bold leading-tight text-foreground">Receba nosso contato para orçamento</h1>
                 <p className="text-sm text-muted-foreground">Preencha apenas se você quiser que nossa equipe entre em contato para entender seu evento e enviar informações ou orçamento.</p>
               </div>
               <div className="space-y-3">
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" className="h-14 rounded-lg text-base" />
                 <Input value={whatsapp} onChange={(e) => setWhatsapp(formatPhone(e.target.value))} inputMode="tel" maxLength={16} placeholder="Seu WhatsApp com DDD" className="h-14 rounded-lg text-base" />
-                <p className="text-xs text-muted-foreground">Usaremos esses dados apenas para entrar em contato sobre seu evento.</p>
               </div>
               <div className="space-y-2">
                 <Button variant="hero" size="touch" className="w-full rounded-lg" onClick={submitBudget} disabled={submitting}>
