@@ -157,6 +157,7 @@ const AdminPage = () => {
             <h1 className="text-xl font-bold leading-tight">Super admin</h1>
           </div>
           <div className="flex gap-2">
+            <Button asChild variant="hero"><Link to="/admin/empresas"><Building2 className="h-4 w-4" /> Empresas</Link></Button>
             <Button asChild variant="quiet"><Link to="/app">Área cliente</Link></Button>
             <Button variant="quiet" size="icon" onClick={signOut} aria-label="Sair"><LogOut className="h-4 w-4" /></Button>
           </div>

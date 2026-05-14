@@ -454,6 +454,32 @@ export type Database = {
           slug: string
         }[]
       }
+      get_admin_companies_overview: {
+        Args: never
+        Returns: {
+          alert_phone: string
+          created_at: string
+          google_clicks_count: number
+          google_reviews_url: string
+          id: string
+          initial_review_question: string
+          leads_count: number
+          name: string
+          responses_count: number
+          slug: string
+          users_count: number
+        }[]
+      }
+      get_admin_company_users: {
+        Args: { _company_id: string }
+        Returns: {
+          email: string
+          full_name: string
+          linked_at: string
+          role: Database["public"]["Enums"]["company_user_role"]
+          user_id: string
+        }[]
+      }
       get_company_response_months: {
         Args: { _company_id: string }
         Returns: {
