@@ -37,6 +37,8 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/app" element={<AppDashboard />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/empresas" element={<AdminCompanies />} />
+            <Route path="/admin/empresas/:companyId" element={<AdminCompanyDetail />} />
             <Route path="/avaliar/:slug" element={<PublicReview />} />
             <Route path="/painel/:slug" element={<PublicPanel />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
