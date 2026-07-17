@@ -243,6 +243,16 @@ const AppDashboard = () => {
     setBudgets((items) => items.map((i) => i.id === id ? { ...i, status } : i));
   };
 
+  const toggleBudgetContacted = async (id: string, contacted: boolean) => {
+    if (!canManageCompany) return toast.error("Você tem acesso somente leitura.");
+    setBudgets((items) => items.map((i) => i.id === id ? { ...i, contacted } : i));
+    const { error } = await (supabase as any).from("budget_requests").update({ contacted }).eq("id", id);
+    if (error) {
+      setBudgets((items) => items.map((i) => i.id === id ? { ...i, contacted: !contacted } : i));
+      toast.error("Não foi possível atualizar.");
+    }
+  };
+
   const switchCompany = async (companyId: string) => {
     const nextCompany = memberships.find((item) => item.company_id === companyId)?.companies ?? null;
     if (!nextCompany) return;
