@@ -16,7 +16,7 @@ type Company = { id: string; owner_user_id: string; name: string; slug: string; 
 type UserCompany = { company_id: string; role: "super_admin" | "company_admin" | "viewer"; companies: Company | null };
 type ExperienceRating = "loved" | "ok" | "improve";
 type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
-type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
+type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; contacted: boolean; };
 type MonthOption = { month_start: string; month_label: string };
 type PeriodValue = "current" | string;
 
