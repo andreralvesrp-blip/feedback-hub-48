@@ -5,6 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +17,7 @@ type Company = { id: string; owner_user_id: string; name: string; slug: string; 
 type UserCompany = { company_id: string; role: "super_admin" | "company_admin" | "viewer"; companies: Company | null };
 type ExperienceRating = "loved" | "ok" | "improve";
 type ExperienceResponse = { id: string; created_at: string; experience_rating: ExperienceRating; comment: string | null; name: string | null; whatsapp: string | null; wants_google_review: boolean; redirected_to_google: boolean; status: string; };
-type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; };
+type Budget = { id: string; created_at: string; name: string; whatsapp: string; interest: string; experience_rating: ExperienceRating | null; status: string; contacted: boolean; };
 type MonthOption = { month_start: string; month_label: string };
 type PeriodValue = "current" | string;
 
@@ -243,6 +244,16 @@ const AppDashboard = () => {
     setBudgets((items) => items.map((i) => i.id === id ? { ...i, status } : i));
   };
 
+  const toggleBudgetContacted = async (id: string, contacted: boolean) => {
+    if (!canManageCompany) return toast.error("Você tem acesso somente leitura.");
+    setBudgets((items) => items.map((i) => i.id === id ? { ...i, contacted } : i));
+    const { error } = await (supabase as any).from("budget_requests").update({ contacted }).eq("id", id);
+    if (error) {
+      setBudgets((items) => items.map((i) => i.id === id ? { ...i, contacted: !contacted } : i));
+      toast.error("Não foi possível atualizar.");
+    }
+  };
+
   const switchCompany = async (companyId: string) => {
     const nextCompany = memberships.find((item) => item.company_id === companyId)?.companies ?? null;
     if (!nextCompany) return;
@@ -346,7 +357,7 @@ const AppDashboard = () => {
 
           <TabsContent value="responses"><DataCard title="Respostas" action={<><Select value={experienceFilter} onValueChange={(v) => setExperienceFilter(v as "all" | ExperienceRating)}><SelectTrigger className="w-44 rounded-lg"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(experienceFilters).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={downloadResponsesCsv}><Download className="h-4 w-4" /> CSV</Button></>}>{visibleResponses.length === 0 ? <Empty /> : visibleResponses.map((r) => <div key={r.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_0.8fr_1.5fr_0.8fr_0.8fr]"><Cell label="Data" value={formatDate(r.created_at)} /><Cell label="Experiência" value={experienceLabels[r.experience_rating]} /><Cell label="Comentário" value={r.comment || "—"} /><Cell label="Contato" value={`${r.name || "—"} ${r.whatsapp || ""}`} /><Cell label="Google" value={r.wants_google_review || r.redirected_to_google ? "Sim" : "Não"} /></div>)}</DataCard></TabsContent>
 
-          <TabsContent value="budgets"><DataCard title="Orçamentos" action={<Select value={budgetStatusFilter} onValueChange={setBudgetStatusFilter}><SelectTrigger className="w-52 rounded-lg"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos</SelectItem>{budgetStatus.map((s) => <SelectItem key={s} value={s}>{budgetStatusLabels[s]}</SelectItem>)}</SelectContent></Select>}>{visibleBudgets.length === 0 ? <Empty /> : visibleBudgets.map((b) => <div key={b.id} className="grid gap-3 border-b border-border py-4 lg:grid-cols-[0.8fr_1fr_1fr_1fr_0.8fr_1fr_0.8fr]"><Cell label="Data" value={formatDate(b.created_at)} /><Cell label="Nome" value={b.name} /><Cell label="WhatsApp" value={b.whatsapp} /><Cell label="Interesse" value={interestLabel[b.interest] || b.interest} /><Cell label="Experiência" value={b.experience_rating ? experienceLabels[b.experience_rating] : "—"} /><Select value={b.status} onValueChange={(v) => updateBudget(b.id, v)}><SelectTrigger className="rounded-lg"><SelectValue /></SelectTrigger><SelectContent>{budgetStatus.map((s) => <SelectItem key={s} value={s}>{budgetStatusLabels[s]}</SelectItem>)}</SelectContent></Select><Button asChild variant="hero"><a href={`https://wa.me/${cleanPhone(b.whatsapp)}`} target="_blank" rel="noreferrer">Chamar</a></Button></div>)}</DataCard></TabsContent>
+          <TabsContent value="budgets"><DataCard title="Orçamentos" action={<Select value={budgetStatusFilter} onValueChange={setBudgetStatusFilter}><SelectTrigger className="w-52 rounded-lg"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos</SelectItem>{budgetStatus.map((s) => <SelectItem key={s} value={s}>{budgetStatusLabels[s]}</SelectItem>)}</SelectContent></Select>}>{visibleBudgets.length === 0 ? <Empty /> : visibleBudgets.map((b) => <div key={b.id} className={`grid gap-3 border-b border-border py-4 lg:grid-cols-[auto_0.8fr_1fr_1fr_1fr_0.8fr_1fr_0.8fr] lg:items-center ${b.contacted ? "opacity-60" : ""}`}><label className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground lg:justify-center"><Checkbox checked={b.contacted} onCheckedChange={(v) => toggleBudgetContacted(b.id, Boolean(v))} aria-label="Marcar como contatado" /><span className="lg:hidden">Já contatado</span></label><Cell label="Data" value={formatDate(b.created_at)} /><Cell label="Nome" value={b.name} /><Cell label="WhatsApp" value={b.whatsapp} /><Cell label="Interesse" value={interestLabel[b.interest] || b.interest} /><Cell label="Experiência" value={b.experience_rating ? experienceLabels[b.experience_rating] : "—"} /><Select value={b.status} onValueChange={(v) => updateBudget(b.id, v)}><SelectTrigger className="rounded-lg"><SelectValue /></SelectTrigger><SelectContent>{budgetStatus.map((s) => <SelectItem key={s} value={s}>{budgetStatusLabels[s]}</SelectItem>)}</SelectContent></Select><Button asChild variant="hero"><a href={`https://wa.me/${cleanPhone(b.whatsapp)}`} target="_blank" rel="noreferrer">Chamar</a></Button></div>)}</DataCard></TabsContent>
 
           <TabsContent value="qr" className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
             <section className="rounded-lg bg-card p-5 shadow-soft"><QRCodeSVG ref={qrRef} value={reviewUrl} size={220} level="H" className="mx-auto h-auto w-full max-w-[220px]" /><div className="mt-5 grid gap-3"><Button variant="hero" size="touch" onClick={() => copy(reviewUrl)}><Copy className="h-4 w-4" /> Copiar link</Button><Button variant="outline" size="touch" onClick={downloadQr}><Download className="h-4 w-4" /> Download do QR</Button></div></section>
