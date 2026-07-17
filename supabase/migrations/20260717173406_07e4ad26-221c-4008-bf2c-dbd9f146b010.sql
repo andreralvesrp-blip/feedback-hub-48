@@ -1,0 +1,1 @@
+ALTER TABLE public.budget_requests ADD COLUMN IF NOT EXISTS contacted BOOLEAN NOT NULL DEFAULT false;

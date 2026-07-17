@@ -53,6 +53,7 @@ export type Database = {
       budget_requests: {
         Row: {
           company_id: string
+          contacted: boolean
           created_at: string
           experience_rating:
             | Database["public"]["Enums"]["experience_rating"]
@@ -67,6 +68,7 @@ export type Database = {
         }
         Insert: {
           company_id: string
+          contacted?: boolean
           created_at?: string
           experience_rating?:
             | Database["public"]["Enums"]["experience_rating"]
@@ -81,6 +83,7 @@ export type Database = {
         }
         Update: {
           company_id?: string
+          contacted?: boolean
           created_at?: string
           experience_rating?:
             | Database["public"]["Enums"]["experience_rating"]
