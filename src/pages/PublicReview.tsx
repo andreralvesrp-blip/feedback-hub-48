@@ -148,33 +148,48 @@ const PublicReview = () => {
     if (id) setStep("done");
   };
 
+  // Abre a aba de forma síncrona (no gesto do clique) para não ser bloqueada em celulares.
+  const openGoogleTab = (url: string) => {
+    const tab = window.open("", "_blank", "noopener,noreferrer");
+    if (tab) return (done: boolean) => { if (done) tab.location.href = url; else tab.close(); };
+    return (done: boolean) => { if (done) window.location.href = url; };
+  };
+
   const handleGoogleContinue = async () => {
+    const finishTab = company?.google_reviews_url ? openGoogleTab(company.google_reviews_url) : null;
     const experienceId = responseId ?? (await submitExperience({ google: true, redirected: false }));
-    if (!experienceId) return;
+    if (!experienceId) {
+      finishTab?.(false);
+      return;
+    }
     if (company?.google_reviews_url) {
       setSubmitting(true);
       const { error } = await (supabase as any).rpc("mark_experience_google_review_intent", { _response_id: experienceId, _company_slug: slug });
       setSubmitting(false);
       if (error) {
+        finishTab?.(false);
         toast.error(error.message || "Não foi possível registrar sua escolha.");
         return;
       }
-      window.open(company.google_reviews_url, "_blank", "noopener,noreferrer");
+      finishTab?.(true);
     }
     setStep("done");
   };
 
   const handleFinalGoogleReview = async () => {
     if (!responseId || !company?.google_reviews_url) return;
+    const finishTab = openGoogleTab(company.google_reviews_url);
     setSubmitting(true);
     const { error } = await (supabase as any).rpc("mark_experience_google_review_intent", { _response_id: responseId, _company_slug: slug });
     setSubmitting(false);
     if (error) {
+      finishTab(false);
       toast.error(error.message || "Não foi possível registrar sua escolha.");
       return;
     }
-    window.open(company.google_reviews_url, "_blank", "noopener,noreferrer");
+    finishTab(true);
   };
+
 
   const submitBudget = async () => {
     const parsed = contactSchema.safeParse({ name, whatsapp });
