@@ -1,0 +1,1 @@
+DELETE FROM public.experience_responses WHERE id = 'cc3e5ac0-a076-49d5-ae6a-0fce9c4665e4';
