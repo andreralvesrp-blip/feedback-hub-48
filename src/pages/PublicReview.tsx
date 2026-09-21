@@ -359,7 +359,7 @@ const PublicReview = () => {
               <span className="block text-5xl" aria-hidden="true">🎉</span>
               <h1 className="text-2xl font-bold leading-tight">Ficamos muito felizes que você tenha gostado! 😊</h1>
               <Textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1200} rows={4} placeholder="O que mais você gostou?" className="min-h-28 rounded-lg text-left text-base" />
-              <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("budget")}>Continuar</Button>
+              <Button variant="hero" size="touch" className="w-full" onClick={handleThanksContinue}>Continuar</Button>
             </div>
           )}
 
