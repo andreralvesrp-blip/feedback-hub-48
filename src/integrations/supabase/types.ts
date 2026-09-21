@@ -567,6 +567,16 @@ export type Database = {
         }
         Returns: string
       }
+      update_experience_response_details: {
+        Args: {
+          _comment?: string
+          _company_slug: string
+          _name?: string
+          _response_id: string
+          _whatsapp?: string
+        }
+        Returns: boolean
+      }
       user_has_any_company: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
