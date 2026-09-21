@@ -129,10 +129,43 @@ const PublicReview = () => {
     return data as string;
   };
 
+  // Grava a resposta imediatamente, para não perder registros se a pessoa abandonar o fluxo.
+  const createInitialResponse = async (value: ExperienceRating) => {
+    const { data, error } = await (supabase as any).rpc("submit_experience_response", {
+      _company_slug: slug,
+      _experience_rating: value,
+      _comment: null,
+      _name: null,
+      _whatsapp: null,
+      _wants_google_review: value === "loved",
+      _redirected_to_google: false,
+    });
+    if (error) return null;
+    setResponseId(data as string);
+    return data as string;
+  };
+
+  const saveDetails = async (id: string) => {
+    if (!comment.trim() && !name.trim() && !sanitizePhone(whatsapp)) return true;
+    const { error } = await (supabase as any).rpc("update_experience_response_details", {
+      _response_id: id,
+      _company_slug: slug,
+      _comment: comment,
+      _name: name.trim(),
+      _whatsapp: sanitizePhone(whatsapp),
+    });
+    if (error) {
+      toast.error(error.message || "Não foi possível salvar sua resposta.");
+      return false;
+    }
+    return true;
+  };
+
   const handleExperience = (value: ExperienceRating) => {
     if (experienceAdvanceTimer.current) window.clearTimeout(experienceAdvanceTimer.current);
     setExperienceRating(value);
     setWantsGoogle(value === "loved");
+    void createInitialResponse(value);
     experienceAdvanceTimer.current = window.setTimeout(() => {
       setStep(value === "loved" ? "thanks" : "private");
     }, 180);
@@ -144,8 +177,17 @@ const PublicReview = () => {
       toast.error(parsed.error.issues[0]?.message || "Confira seus dados.");
       return;
     }
-    const id = await submitExperience();
-    if (id) setStep("done");
+    setSubmitting(true);
+    const id = responseId ?? (await submitExperience());
+    const ok = id ? await saveDetails(id) : false;
+    setSubmitting(false);
+    if (ok) setStep("done");
+  };
+
+  const handleThanksContinue = async () => {
+    const id = responseId ?? (await createInitialResponse("loved"));
+    if (id) await saveDetails(id);
+    setStep("budget");
   };
 
   // Abre a aba de forma síncrona (no gesto do clique) para não ser bloqueada em celulares.
@@ -317,7 +359,7 @@ const PublicReview = () => {
               <span className="block text-5xl" aria-hidden="true">🎉</span>
               <h1 className="text-2xl font-bold leading-tight">Ficamos muito felizes que você tenha gostado! 😊</h1>
               <Textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1200} rows={4} placeholder="O que mais você gostou?" className="min-h-28 rounded-lg text-left text-base" />
-              <Button variant="hero" size="touch" className="w-full" onClick={() => setStep("budget")}>Continuar</Button>
+              <Button variant="hero" size="touch" className="w-full" onClick={handleThanksContinue}>Continuar</Button>
             </div>
           )}
 
