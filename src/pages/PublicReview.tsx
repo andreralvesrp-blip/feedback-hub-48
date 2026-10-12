@@ -192,8 +192,12 @@ const PublicReview = () => {
 
   // Abre a aba de forma síncrona (no gesto do clique) para não ser bloqueada em celulares.
   const openGoogleTab = (url: string) => {
-    const tab = window.open("", "_blank", "noopener,noreferrer");
-    if (tab) return (done: boolean) => { if (done) tab.location.href = url; else tab.close(); };
+    // Sem "noopener" aqui: com ele o navegador devolve null e não conseguimos redirecionar a aba.
+    const tab = window.open("about:blank", "_blank");
+    if (tab) {
+      try { tab.opener = null; } catch { /* ignore */ }
+      return (done: boolean) => { if (done) tab.location.href = url; else tab.close(); };
+    }
     return (done: boolean) => { if (done) window.location.href = url; };
   };
 
